@@ -1,0 +1,36 @@
+---
+- name: create volume group
+  lvg:
+    vg: "{{ inventory_hostname }}"
+    pvs: ["/dev/mapper/{{ inventory_hostname }}"]
+  become: yes
+
+- name: create logical volume
+  lvol:
+    vg: "{{ inventory_hostname }}"
+    lv: "lv_{{ inventory_hostname }}"
+    size: +100%FREE
+    shrink: no
+  become: yes
+
+- name: make filesystem
+  filesystem:
+    fstype: ext4
+    dev: "/dev/mapper/{{ inventory_hostname }}-lv_{{ inventory_hostname }}"
+    resizefs: yes
+  become: yes
+
+- name: mount disk
+  mount:
+    path: /vz/private
+    src: "/dev/mapper/{{ inventory_hostname }}-lv_{{ inventory_hostname }}"
+    fstab: /tmp/dmy_fstab
+    fstype: ext4
+    state: mounted
+    opts: _netdev,noatime,nodiratime,barrier=0,discard
+  become: yes
+  
+- name: remove dummy file
+  file:
+    path: /tmp/dmy_fstab
+    state: absent

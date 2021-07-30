@@ -1,0 +1,18 @@
+---
+- name: update ntp server to connect
+  copy:
+    src: etc/chrony.conf
+    dest: /etc/chrony.conf
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - custom
+
+- name: restart chronyd.service
+  systemd:
+    name: chronyd
+    state: restarted
+    enabled: yes
+  tags:
+    - cus

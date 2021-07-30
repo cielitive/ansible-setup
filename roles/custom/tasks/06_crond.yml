@@ -1,0 +1,28 @@
+---
+- name: update mail sending settings
+  copy:
+    src: etc/sysconfig/crond
+    dest: /etc/sysconfig/crond
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - custom
+
+- name: restart crond.service
+  systemd:
+    name: crond
+    state: restarted
+    enabled: yes
+  tags:
+    - cus
+
+- name: update crontab file
+  copy:
+    src: etc/crontab
+    dest: /etc/crontab
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - custom

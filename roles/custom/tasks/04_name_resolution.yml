@@ -1,0 +1,51 @@
+---
+- name: disable dns resolver for NetworkManager
+  copy:
+    src: etc/NetworkManager/conf.d/90-dns-none.conf
+    dest: /etc/NetworkManager/conf.d/90-dns-none.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart NetworManager.service
+  tags:
+    - custom
+
+- name: update the use nameserver
+  copy:
+    src: etc/resolv.conf
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - custom
+
+- name: update name service switch configuration
+  copy:
+    src: etc/{{ nsswitch_file }}
+    dest: /etc/nsswitch.conf
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - custom
+
+- name: update hosts file
+  copy:
+    src: etc/hosts
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - custom
+
+- name: update public zone file
+  copy:
+    src: etc/firewalld/zones/public.xml
+    dest: /etc/firewalld/zones/public.xml
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - custom

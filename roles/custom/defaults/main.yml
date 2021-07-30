@@ -1,0 +1,20 @@
+nsswitch_file: dns_disable_nsswitch.conf
+dirs:
+  - { path: /var/opt, owner: root, group: root, permit: '0755' }
+  - { path: /infra/backup, owner: root, group: root, permit: '0755' }
+  # - { path: /infra/logs, owner: infra01, group: infra, permit: '0755' }
+  - { path: /infra/logs, owner: root, group: root, permit: '0755' }
+  # - { path: /infra/work, owner: infra01, group: infra, permit: '0777' }
+  - { path: /infra/work, owner: root, group: root, permit: '0777' }
+  # - { path: /infra/work, owner: infra01, group: infra, permit: '0777' }
+  - { path: /infra/work, owner: root, group: root, permit: '0777' }
+groups:
+  - { name: gropup1, gid: 100 }
+  - { name: gropup1, gid: 200 }
+  - { name: gropup1, gid: 300 }
+users:
+  - { name: user1, uid: 100, shell: /bin/bash, group: engineer }
+  - { name: user2, uid: 200, shell: /bin/bash, group: engineer }
+  - { name: user3, uid: 300, shell: /bin/bash, group: engineer }
+sysctl:
+  - { key: 'vm.swappiness', value: '5' }

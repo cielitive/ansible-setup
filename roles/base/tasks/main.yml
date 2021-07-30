@@ -1,0 +1,124 @@
+---
+- name: change systemd default LogLevel
+  copy:
+    src: etc/systemd/system.conf
+    dest: /etc/systemd/system.conf
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - base
+
+- name: configure system logging Rate-limit
+  copy:
+    src: etc/systemd/journald.conf
+    dest: /etc/systemd/journald.conf
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - base
+
+- name: enable persistent logging for systemd journal
+  file:
+    path: /var/log/journal
+    state: directory
+    owner: root
+    group: systemd-journal
+    mode: '2755'
+  tags:
+    - base
+
+- name: add log rotation file
+  copy:
+    src: '{{ item }}'
+    dest: /etc/logrotate.d/
+    owner: root
+    group: root
+    mode: '0644'
+  with_fileglob:
+    - etc/logrotate.d/*
+  tags:
+    - base
+
+- name: update SSH configuration
+  copy:
+    src: etc/ssh/sshd_config
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: '0600'
+  tags:
+    - base
+
+- name: update password policy
+  copy:
+    src: etc/login.defs
+    dest: /etc/login.defs
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - base
+
+- name: update PAMified services configuration
+  copy:
+    src: etc/pam.d/system-auth
+    dest: /etc/pam.d/system-auth
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - base
+
+- name: restrict use of su command
+  copy:
+    src: etc/pam.d/su
+    dest: /etc/pam.d/su
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - base
+
+- name: restrict use of "su -l" command
+  copy:
+    src: etc/pam.d/su-l
+    dest: /etc/pam.d/su-l
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - base
+
+- name: disable wifi interface
+  shell: nmcli radio wifi off
+  tags:
+    - base
+
+- name: disable wwan interface
+  shell: nmcli radio wwan off
+  tags:
+    - base
+
+- name: disable bridge network
+  systemd:
+    name: libvirtd
+    state: stopped
+    enabled: no
+  tags:
+    - base
+
+- name: disable selinux
+  copy:
+    src: etc/selinux/config
+    dest: /etc/selinux/config
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - base
+# - name: update scsi device timeout
+#   shell: echo 30 | tee /sys/class/scsi_generic/sg0/device/timeout /sys/class/scsi_generic/sg1/device/timeout 1>/dev/null
+#   tags:
+#     - base

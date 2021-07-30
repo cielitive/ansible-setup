@@ -1,0 +1,9 @@
+---
+- name: create directory
+  file:
+    path: '{{ item.path }}'
+    state: directory
+    owner: '{{ item.owner }}'
+    group: '{{ item.group }}'
+    mode: '{{ item.permit }}'
+  loop: '{{ dirs|flatten(levels=1) }}'
