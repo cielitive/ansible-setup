@@ -8,7 +8,7 @@
     mode: '0644'
   notify: restart crond.service
   tags:
-    - custom
+    - extra
 
 - name: update crontab file
   copy:
@@ -18,4 +18,4 @@
     group: root
     mode: '0644'
   tags:
-    - custom
+    - extra

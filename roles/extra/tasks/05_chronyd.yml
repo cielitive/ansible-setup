@@ -8,4 +8,4 @@
     mode: '0644'
   notify: restart chronyd.service
   tags:
-    - custom
+    - extra

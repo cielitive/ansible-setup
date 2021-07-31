@@ -7,3 +7,4 @@
 - name: debug
   debug:
     msg: "{{ host.name }}"
+  tags: extra

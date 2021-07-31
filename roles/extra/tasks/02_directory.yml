@@ -8,7 +8,7 @@
     mode: '{{ item.permit }}'
   loop: '{{ default_dirs }}'
   tags:
-    - custom
+    - extra
 
 - name: create directory
   file:
@@ -20,4 +20,4 @@
   loop: '{{ host.dirs }}'
   when: host.dirs is defined
   tags:
-    - custom
+    - extra

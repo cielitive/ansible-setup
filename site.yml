@@ -1,5 +1,5 @@
 ---
-- name: setup virtual server
+- name: virtual server initial setup
   hosts: all
   remote_user: root
   # become: true
@@ -8,4 +8,4 @@
 
   roles:
     # - base
-    - custom
+    - extra

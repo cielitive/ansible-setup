@@ -6,7 +6,7 @@
     state: present
   loop: '{{ default_sysctl }}'
   tags:
-    - custom
+    - extra
 
 - name: set kernel parameters
   sysctl:
@@ -16,4 +16,4 @@
   loop: '{{ host.sysctl }}'
   when: host.sysctl is defined
   tags:
-    - custom
+    - extra
