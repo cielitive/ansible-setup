@@ -1,4 +1,15 @@
 ---
+- name: create directory for default
+  file:
+    path: '{{ item.path }}'
+    state: directory
+    owner: '{{ item.owner }}'
+    group: '{{ item.group }}'
+    mode: '{{ item.permit }}'
+  loop: '{{ default_dirs }}'
+  tags:
+    - custom
+
 - name: create directory
   file:
     path: '{{ item.path }}'
@@ -6,4 +17,7 @@
     owner: '{{ item.owner }}'
     group: '{{ item.group }}'
     mode: '{{ item.permit }}'
-  loop: '{{ dirs|flatten(levels=1) }}'
+  loop: '{{ host.dirs }}'
+  when: host.dirs is defined
+  tags:
+    - custom

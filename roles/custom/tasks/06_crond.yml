@@ -6,16 +6,9 @@
     owner: root
     group: root
     mode: '0644'
+  notify: restart crond.service
   tags:
     - custom
-
-- name: restart crond.service
-  systemd:
-    name: crond
-    state: restarted
-    enabled: yes
-  tags:
-    - cus
 
 - name: update crontab file
   copy:

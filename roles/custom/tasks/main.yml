@@ -1,4 +1,9 @@
 ---
+# - name: debug
+#   set_fact:
+#     users: "{{ default_users | combine(user, list_merge='append') }}"
+#   when: user is defined
+
 - name: debug
   debug:
-    msg: Hello World
+    msg: "{{ host.name }}"

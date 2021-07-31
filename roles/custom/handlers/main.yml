@@ -3,3 +3,13 @@
   service:
     name: NetworkManager
     state: restarted
+
+- name: restart chronyd.service
+  systemd:
+    name: chronyd
+    state: restarted
+
+- name: restart crond.service
+  systemd:
+    name: crond
+    state: restarted

@@ -1,0 +1,46 @@
+---
+- name: add the group for default
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid }}"
+    state: present
+  loop: "{{ default_groups }}"
+  tags:
+    - custom
+
+- name: add the group
+  ansible.builtin.group:
+    name: "{{ item.name }}"
+    gid: "{{ item.gid }}"
+    state: present
+  loop: "{{ host.groups }}"
+  when: host.groups is defined
+  tags:
+    - custom
+  
+- name: add the user for default
+  user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    group: "{{ item.group }}"
+    groups: "{{ item.groups }}"
+    shell: "{{ item.shell }}"
+    home: "{{ item.home }}"
+    password: "{{ item.password | password_hash('sha512', 'changed') }}"
+  loop: "{{ default_users }}"
+  tags:
+    - custom
+
+- name: add the user
+  user:
+    name: "{{ item.name }}"
+    uid: "{{ item.uid }}"
+    group: "{{ item.group }}"
+    groups: "{{ item.groups }}"
+    shell: "{{ item.shell }}"
+    home: "{{ item.home }}"
+    password: "{{ item.password | password_hash('sha512', 'changed') }}"
+  loop: "{{ host.users }}"
+  when: host.users is defined
+  tags:
+    - custom

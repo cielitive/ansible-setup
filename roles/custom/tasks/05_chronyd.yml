@@ -6,13 +6,6 @@
     owner: root
     group: root
     mode: '0644'
+  notify: restart chronyd.service
   tags:
     - custom
-
-- name: restart chronyd.service
-  systemd:
-    name: chronyd
-    state: restarted
-    enabled: yes
-  tags:
-    - cus

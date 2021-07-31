@@ -118,6 +118,7 @@
     mode: '0644'
   tags:
     - base
+
 # - name: update scsi device timeout
 #   shell: echo 30 | tee /sys/class/scsi_generic/sg0/device/timeout /sys/class/scsi_generic/sg1/device/timeout 1>/dev/null
 #   tags:

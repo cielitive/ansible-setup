@@ -1,7 +1,19 @@
 ---
+- name: set kernel parameters for default
+  sysctl:
+    name: '{{ item.key }}'
+    value: "{{ item.value }}"
+    state: present
+  loop: '{{ default_sysctl }}'
+  tags:
+    - custom
+
 - name: set kernel parameters
   sysctl:
     name: '{{ item.key }}'
-    value: '{{ item.value }}'
+    value: "{{ item.value }}"
     state: present
-  loop: '{{ sysctl }}'
+  loop: '{{ host.sysctl }}'
+  when: host.sysctl is defined
+  tags:
+    - custom

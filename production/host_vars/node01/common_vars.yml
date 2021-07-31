@@ -1,2 +1,18 @@
 host:
   name: node01
+  ### add users
+  groups:
+    - { name: grp00, gid: 2000 }
+    - { name: grp01, gid: 2001 }
+  ### add groups
+  users:
+    - { name: usr01, uid: 1001, group: grp01, groups: grp00, shell: /bin/bash, home: /home/usr01, password: usr01 }
+  ### create directory
+  dirs:
+    - { path: /var/node01, owner: root, group: root, permit: '0755' }
+  ### update kernel parameter
+  sysctl:
+    - { key: 'vm.swappiness', value: '25' }
+  ### enable:             "hosts:      files dns"
+  ### disable(default):   "hosts:      files"
+  # nsswitch_hosts_dns: enable

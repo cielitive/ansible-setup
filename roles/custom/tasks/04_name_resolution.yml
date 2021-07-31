@@ -20,9 +20,16 @@
   tags:
     - custom
 
+- name: update in nsswitch.conf
+  set_fact:
+    nsswitch_hosts: 'files dns'
+  when: host.nsswitch_hosts_dns is defined and host.nsswitch_hosts_dns == 'enable'
+  tags:
+    - custom
+
 - name: update name service switch configuration
-  copy:
-    src: etc/{{ nsswitch_file }}
+  template:
+    src: etc/nsswitch.conf
     dest: /etc/nsswitch.conf
     owner: root
     group: root

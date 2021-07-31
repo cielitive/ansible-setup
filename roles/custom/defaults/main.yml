@@ -1,5 +1,15 @@
-nsswitch_file: dns_disable_nsswitch.conf
-dirs:
+default_groups:
+  - { name: group00, gid: 1100 }
+  - { name: group01, gid: 1001 }
+  - { name: group02, gid: 1002 }
+  - { name: group03, gid: 1003 }
+  - { name: group04, gid: 1004 }
+default_users:
+  - { name: user01, uid: 1001, group: group01, groups: group00, shell: /bin/bash, home: /home/user01, password: user01 }
+  - { name: user02, uid: 1002, group: group02, groups: group00, shell: /bin/bash, home: /home/user02, password: user02 }
+  - { name: user03, uid: 1003, group: group03, groups: '', shell: /bin/bash, home: /home/user03, password: user03 }
+  - { name: user04, uid: 1004, group: group04, groups: '', shell: /bin/bash, home: /home/user04, password: user04 }
+default_dirs:
   - { path: /var/opt, owner: root, group: root, permit: '0755' }
   - { path: /infra/backup, owner: root, group: root, permit: '0755' }
   # - { path: /infra/logs, owner: infra01, group: infra, permit: '0755' }
@@ -8,13 +18,5 @@ dirs:
   - { path: /infra/work, owner: root, group: root, permit: '0777' }
   # - { path: /infra/work, owner: infra01, group: infra, permit: '0777' }
   - { path: /infra/work, owner: root, group: root, permit: '0777' }
-groups:
-  - { name: gropup1, gid: 100 }
-  - { name: gropup1, gid: 200 }
-  - { name: gropup1, gid: 300 }
-users:
-  - { name: user1, uid: 100, shell: /bin/bash, group: engineer }
-  - { name: user2, uid: 200, shell: /bin/bash, group: engineer }
-  - { name: user3, uid: 300, shell: /bin/bash, group: engineer }
-sysctl:
+default_sysctl:
   - { key: 'vm.swappiness', value: '5' }
