@@ -111,7 +111,7 @@ Server={{ zabbix_server }}
 #
 # Mandatory: no
 # Default:
-ListenIP={{ ansible_default_ipv4.address }}
+ListenIP={{ listen_ip }}
 
 ### Option: StartAgents
 #       Number of pre-forked instances of zabbix_agentd that process passive checks.
@@ -147,7 +147,7 @@ ListenIP={{ ansible_default_ipv4.address }}
 # Default:
 # Hostname=
 
-Hostname={{ inventory_hostname }}
+Hostname={{ host.name }}
 
 ### Option: HostnameItem
 #       Item used for generating Hostname if it is undefined. Ignored if Hostname is defined.
