@@ -6,7 +6,7 @@
     state: present
   loop: "{{ default_groups }}"
   tags:
-    - extra
+    - '07'
 
 - name: add the group
   ansible.builtin.group:
@@ -16,7 +16,7 @@
   loop: "{{ host.groups }}"
   when: host.groups is defined
   tags:
-    - extra
+    - '07'
   
 - name: add the user for default
   user:
@@ -27,9 +27,10 @@
     shell: "{{ item.shell }}"
     home: "{{ item.home }}"
     password: "{{ item.password | password_hash('sha512', 'changed') }}"
+    state: present
   loop: "{{ default_users }}"
   tags:
-    - extra
+    - '07'
 
 - name: add the user
   user:
@@ -40,7 +41,8 @@
     shell: "{{ item.shell }}"
     home: "{{ item.home }}"
     password: "{{ item.password | password_hash('sha512', 'changed') }}"
+    state: present
   loop: "{{ host.users }}"
   when: host.users is defined
   tags:
-    - extra
+    - '07'

@@ -8,7 +8,7 @@
     mode: '0644'
   notify: restart NetworManager.service
   tags:
-    - extra
+    - '04'
 
 - name: update the use nameserver
   copy:
@@ -18,14 +18,14 @@
     group: root
     mode: '0644'
   tags:
-    - extra
+    - '04'
 
 - name: update in nsswitch.conf
   set_fact:
     nsswitch_hosts: 'files dns'
   when: host.nsswitch_hosts_dns is defined and host.nsswitch_hosts_dns == 'enable'
   tags:
-    - extra
+    - '04'
 
 - name: update name service switch configuration
   template:
@@ -35,24 +35,4 @@
     group: root
     mode: '0644'
   tags:
-    - extra
-
-- name: update hosts file
-  copy:
-    src: etc/hosts
-    dest: /etc/hosts
-    owner: root
-    group: root
-    mode: '0644'
-  tags:
-    - extra
-
-- name: update public zone file
-  copy:
-    src: etc/firewalld/zones/public.xml
-    dest: /etc/firewalld/zones/public.xml
-    owner: root
-    group: root
-    mode: '0644'
-  tags:
-    - extra
+    - '04'

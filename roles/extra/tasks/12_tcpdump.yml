@@ -1,0 +1,20 @@
+---
+- name: create directory
+  file:
+    path: /tcpdump/tcpdump_pos1
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags:
+    - '12'
+
+- name: copy service file
+  copy:
+    src: etc/systemd/system/tcpdump_pos1.service
+    dest: /etc/systemd/system/tcpdump_pos1.service
+    owner: root
+    group: root
+    mode: '0644'
+  tags:
+    - '12'

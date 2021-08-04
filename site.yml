@@ -6,7 +6,55 @@
   # become_method: sudo
   # gather_facts: false
 
-  roles:
-    # - base
-    # - extra
-    - zabbix-agent
+  # vars_prompt:
+  #   - name: prompt_vars
+  #     prompt: 'input: '
+  #     default: 'prompt'
+  #     confirm: no
+  #     private: no
+
+  # pre_tasks:
+  #   - name: pre tasks
+  #     debug:
+  #       msg: >-
+  #         start...
+  #         pre tasks
+  
+  # post_tasks:
+  # - name: post tasks
+  #   debug:
+  #     msg: >-
+  #       post tasks
+  #       ...end
+
+  tasks:
+  #   - name: debug tasks
+  #     shell: exit 1
+  #     changed_when: false
+  #     failed_when: false
+  #     check_mode: false
+  
+  #   - name: debug tasks
+  #     shell: |
+  #       st=""
+  #       if [[ ${st} ]]; then
+  #         echo true >/tmp/sample
+  #       else
+  #         echo false >/tmp/sample
+  #       fi
+
+    - name: debug
+      shell: systemctl status dilay-manager
+      register: res
+      ignore_errors: yes
+
+    - name: debug
+      debug:
+        msg: hello
+      tags:
+       - '01'
+
+  # roles:
+  #   - base
+  #   - extra
+  #   - zabbix-agent
