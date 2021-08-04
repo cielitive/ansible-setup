@@ -1,0 +1,6 @@
+---
+- name: add static routes
+  shell: nmcli connection modify "{{ item.connection }}" +ipv4.routes "{{ item.route }}"
+  loop: "{{ host.ipv4_route }}"
+  tags:
+    - '03'

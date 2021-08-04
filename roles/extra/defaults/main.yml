@@ -20,3 +20,4 @@ default_dirs:
   - { path: /infra/work, owner: root, group: root, permit: '0777' }
 default_sysctl:
   - { key: 'vm.swappiness', value: '5' }
+nsswitch_hosts: "file"

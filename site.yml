@@ -27,12 +27,13 @@
   #       post tasks
   #       ...end
 
-  tasks:
+  # tasks:
   #   - name: debug tasks
   #     shell: exit 1
   #     changed_when: false
   #     failed_when: false
   #     check_mode: false
+  #     ignore_errors: yes
   
   #   - name: debug tasks
   #     shell: |
@@ -43,18 +44,6 @@
   #         echo false >/tmp/sample
   #       fi
 
-    - name: debug
-      shell: systemctl status dilay-manager
-      register: res
-      ignore_errors: yes
-
-    - name: debug
-      debug:
-        msg: hello
-      tags:
-       - '01'
-
-  # roles:
-  #   - base
-  #   - extra
-  #   - zabbix-agent
+  roles:
+    # - base
+    - extra

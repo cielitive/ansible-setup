@@ -1,10 +1,3 @@
 ---
-# - name: debug
-#   set_fact:
-#     users: "{{ default_users | combine(user, list_merge='append') }}"
-#   when: user is defined
-
 - name: debug
-  debug:
-    msg: "{{ host.name }}"
-  tags: extra
+  import_tasks: ./04_name_resolution.yml

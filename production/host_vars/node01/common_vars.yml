@@ -10,9 +10,19 @@ host:
   ### create directory
   dirs:
     - { path: /var/node01, owner: root, group: root, permit: '0755' }
-  ### update kernel parameter
+  ### kernel parameter
   sysctl:
     - { key: 'vm.swappiness', value: '25' }
+  ### static route
+  ipv4_route:
+    - { connection: 'enp0s9', route: '192.0.3.0/24 192.0.2.1' }
+    - { connection: 'enp0s9', route: '192.0.5.0/24 192.0.2.1' }
+  ### limit.conf 
+  pam_limit:
+    - { domain: apache, type: soft, item: nofile, value: '10000' }
+    - { domain: apache, type: hard, item: nofile, value: '10000' }
+    - { domain: apache, type: soft, item: nproc, value: '10000' }
+    - { domain: apache, type: hard, item: nproc, value: '10000' }
   ### enable:             "hosts:      files dns"
   ### disable(default):   "hosts:      files"
   # nsswitch_hosts_dns: enable
