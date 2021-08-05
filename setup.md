@@ -1,6 +1,6 @@
-### GUI(GNOME)
+### 1. GUI(GNOME)
 
-#### デスクトップ環境の自動起動を無効化する
+#### 1-1. デスクトップ環境の自動起動を無効化する
 
 ```bash
 $ systemctl disable display-manager
@@ -10,7 +10,7 @@ $ systemctl is-enabled gdm
 disabled
 ```
 
-#### "X Window System"起動時のデフォルト言語を日本語にする
+#### 1-2. "X Window System"起動時のデフォルト言語を日本語にする
 
 ```bash
 $ /usr/bin/startx
@@ -21,7 +21,7 @@ $ egrep "^LANG" /usr/bin/startx | cut -d'=' -f2
 LANG=ja_JP.UTF-8
 ```
 
-#### "Ctrl-Alt-Del"によるサーバ再起動を無効化する
+#### 1-3. "Ctrl-Alt-Del"によるサーバ再起動を無効化する
 
 ```bash
 $ systemctl mask ctrl-alt-del.target
@@ -44,7 +44,7 @@ none
 $ systemctl daemon-reexec
 ```
 
-#### すべてのユーザーの"Ctrl-Alt-Del"を無効化する (GUI環境では、上記設定でも"Ctrl-Alt-Del"使用できてしまうため)
+#### 1-4. すべてのユーザーの"Ctrl-Alt-Del"を無効化する (GUI環境では、上記設定でも"Ctrl-Alt-Del"使用できてしまうため)
 
 ```bash
 $ cat <<EOT >/etc/dconf/db/local.d/00-disable-CAD
@@ -70,7 +70,7 @@ $ ls /etc/dconf/db/local.d/locks/00-disable-CAD
 $ dconf update
 ```
 
-#### PulseAudio(サウンドサーバ)のログ出力を無効化する
+#### 1-5. PulseAudio(サウンドサーバ)のログ出力を無効化する
 
 ```bash
 $ updatedb
@@ -86,7 +86,7 @@ $ mv /usr/lib/systemd/user/pulseaudio.socket /tmp
 $ 
 ```
 
-#### PulseAudio(サウンドサーバ)
+#### 1-6. デスクトップ環境のPulseAudio(サウンドサーバ)を無効化する
 
 ```bash
 $ cp /dev/null /usr/bin/pulseaudio
@@ -96,9 +96,9 @@ $ rm -f /etc/xdg/autostart/pulseaudio.desktop
 $ 
 ```
 
-### システム認証・認証セキュリティ
+### 2. システム認証・認証セキュリティ
 
-#### 指紋リーダーによる認証を無効化する
+#### 2-1. 指紋リーダーによる認証を無効化する
 
 ```bash
 $ authselect disable-feature with-fingerprint
@@ -114,7 +114,7 @@ $ cat /etc/pam.d/fingerprint-auth
 $ 
 ```
 
-#### パスワードポリシーを変更する
+#### 2-2. パスワードポリシーを変更する
 
 ```bash
 $ sed -i '/^PASS_MIN_LEN/s/5/8/' /etc/login.defs
@@ -126,7 +126,7 @@ $ egrep "^PASS_MIN_LEN" /etc/login.defs | awk '{print $2}'
 8
 ```
 
-#### PAM認証ポリシーを修正する
+#### 2-3. PAM認証ポリシーを変更する
 
 ```bash
 $ sed -i '' /etc/pam.d/system-auth
@@ -139,7 +139,7 @@ $
 password    sufficient    pam_unix.so sha512 shadow try_first_pass use_authtok remember=4
 ```
 
-#### "su", "su-"コマンドによるユーザ切り替えをwheelグループのみに制限する
+#### 2-4. "su", "su-"コマンドによるユーザ切り替えをwheelグループのみに制限する
 
 ```bash
 $ sed -i '/#auth\s\+required/s/^#//' /etc/pam.d/su
@@ -157,9 +157,9 @@ $ cat /etc/pam.d/su-l | egrep "^auth\s+required"
 auth           required        pam_wheel.so use_uid
 ```
 
-### ディスク
+### 3. ディスク
 
-#### ディスクタイムアウト値を変更する
+#### 3-1. ディスクタイムアウト値を変更する
 
 ```bash
 $ echo 30 | tee /sys/class/scsi_generic/sg0/device/timeout /sys/class/scsi_generic/sg1/device/timeout 1>/dev/null
@@ -171,7 +171,7 @@ $ cat /sys/class/scsi_generic/sg1/device/timeout
 30
 ```
 
-#### 論理ボリュームを作成する
+#### 3-2. 論理ボリュームを作成する
 
 ```bash
 $ 
@@ -180,9 +180,9 @@ $
 $ 
 ```
 
-### グループ・ユーザ
+### 4. グループ・ユーザ
 
-#### グループを作成する
+#### 4-1. グループを作成する
 
 ```bash
 $ groupadd -g 3003 ansible
@@ -192,7 +192,7 @@ $ cat /etc/group | egrep "^ansible:"
 ansible:x:1000:
 ```
 
-#### ユーザを作成する
+#### 4-2. ユーザを作成する
 
 ```bash
 $ useradd -u 1000 -g ansible -m -d /home/ansible -s /bin/bash ansible
@@ -202,7 +202,7 @@ $ id ansible
 uid=1000(ansible) gid=1000(ansible) groups=1000(ansible),10(wheel)
 ```
 
-#### 特定のコマンドのみ実行できるよう、sudo権限を追加する
+#### 4-3. 特定のコマンドのみ実行できるよう、sudo権限を追加する
 
 ```bash
 $ echo "user01       ALL=(ALL)       NOPASSWD: /usr/bin/systemctl * sshd" >>/etc/sudoers
@@ -214,7 +214,7 @@ $ egrep "^user01" /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-
 NOPASSWD: usr/bin/systemctl * sshd
 ```
 
-#### ".bash_profile"に環境変数を追記する
+#### 4-4. ".bash_profile"に環境変数を追記する
 
 ```bash
 $ cat <<EOT >>/home/<user>/.bash_profile
@@ -230,9 +230,9 @@ $ egrep "^export PATH=" /home/<user>/.bash_profile
 export PATH=$PATH:/usr/java/defalut/lib
 ```
 
-### ディレクトリ・ファイル
+### 5. ディレクトリ・ファイル
 
-#### ディレクトリを作成する
+#### 5-1. ディレクトリを作成する
 
 ```bash
 $ mkdir -p /var/opt
@@ -266,9 +266,9 @@ $ ls -d /infra/scripts
 /infra/scripts
 ```
 
-### カーネル
+### 6. カーネル
 
-#### カーネル・パラメータを追加、修正する
+#### 6-1. カーネル・パラメータを追加、修正する
 
 ```bash
 $ echo "kernel.watchdog = 0" >>/etc/sysctl.conf
@@ -279,7 +279,7 @@ $ sysctl -n kernel.watchdog
 0
 ```
 
-#### ユーザのリソース制限を修正する
+#### 6-2. ユーザのリソース制限を変更する
 
 ```bash
 $ cat <<EOT >/etc/security/limits.conf
@@ -300,9 +300,9 @@ $ grep "apache" /etc/security/limits.conf | grep "hard" | grep "nproc" | awk '{p
 10000
 ```
 
-### ネットワーク
+### 7. ネットワーク
 
-#### 無線LANを無効化する
+#### 7-1. 無線LANを無効化する
 
 ```bash
 $ nmcli radio wifi off
@@ -318,7 +318,7 @@ WWAN
 無効
 ```
 
-#### 仮想ブリッチを無効化する
+#### 7-2. 仮想ブリッチを無効化する
 
 ```bash
 $ systemctl disable libvirtd
@@ -328,7 +328,7 @@ $ systemctl is-enabled libvirtd
 disabled
 ```
 
-#### スタティック・ルーティングを追加する
+#### 7-3. スタティック・ルーティングを追加する
 
 ```bash
 $ nmcli connection modify ens192 +ipv4.routes "192.0.2.0/24 198.51.100.1"
@@ -339,7 +339,7 @@ $ nmcli con show ens192 | grep ipv4.routes
 ipv4.routes:                            { ip = 192.0.2.0/24, nh = 198.51.100.1 }; { ip = 192.0.3.0/24, nh = 198.51.100.1 }
 ```
 
-#### NetworkManagerの名前解決機能を無効化する
+#### 7-4. NetworkManagerの名前解決機能を無効化する
 
 ```bash
 $ cat <<EOT >/etc/NetworkManager/conf.d/90-dns-none.conf
@@ -353,7 +353,7 @@ $ cat /etc/NetworkManager/conf.d/90-dns-none.conf
 dns=none
 ```
 
-#### ネームサーバを追加する
+#### 7-5. ネームサーバを追加する
 
 ```bash
 $ cat <<EOT >/etc/resolv.conf
@@ -367,7 +367,7 @@ nameserver 192.168.2.39
 nameserver 192.168.2.38
 ```
 
-#### 名前解決順を修正する
+#### 7-6. 名前解決順を変更する
 
 ```bash
 # $ sed -i '/^hosts:/s/files dns myhostname/files/' /etc/nsswitch.conf
@@ -385,9 +385,9 @@ $ systemctl reload NetworkManager
 $ systemctl status NetworkManager
 ```
 
-### tcpdump
+### 8. tcpdump
 
-#### ログ格納ディレクトリを作成する
+#### 8-1. ログ格納ディレクトリを作成する
 
 ```bash
 $ mkdir -p /tcpdump/tcpdump_app
@@ -396,6 +396,8 @@ $ mkdir -p /tcpdump/tcpdump_app
 $ ls -d /tcpdump/tcpdump_app
 /tcpdump/tcpdump_app
 ```
+
+### 8-2. tcpdumpサービスのunitファイルを追加する
 
 ```bash
 $ cat <<EOT >/etc/systemd/system/tcpdump_app.service
@@ -427,9 +429,9 @@ $ systemctl deamon-reload
 $ systemctl status tcpdump_app
 ```
 
-### systemd-journald
+### 9. systemd-journald
 
-#### システムログレベルを変更する
+#### 9-1. システムログレベルを変更する
 
 ```bash
 $ sed -i 's/^#LogLevel=info/LogLevel=notice/' /etc/systemd/system.conf
@@ -439,7 +441,7 @@ $ egrep "^LogLevel" /etc/systemd/system.conf | cut -d'=' -f2
 notice
 ```
 
-#### メッセージ出力レートの制限を変更する
+#### 9-2. メッセージ出力レートの制限を変更する
 
 ```bash
 $ sed -i 's/#RateLimitIntervalSec=30s/RateLimitIntervalSec=0/' /etc/systemd/journald.conf
@@ -455,7 +457,7 @@ $ egrep "SystemMaxUse" /etc/systemd/journald.conf | cut -d'=' -f2
 
 ```
 
-#### ジャーナルログを永続化する
+#### 9-3. ジャーナルログを永続化する
 
 ```bash
 $ mkdir /var/log/journal
@@ -473,9 +475,9 @@ $ systemctl restart systemd-journald
 $ systemctl status systemd-journald
 ```
 
-### chronyd
+### 10. chronyd
 
-#### IPv4アドレスのみ解決するようにする
+#### 10-1. IPv4アドレスのみ解決するようにする
 
 ```bash
 $ sed -i 's/OPTIONS=""/OPTIONS="-4"/' /etc/sysconfig/chronyd
@@ -485,7 +487,7 @@ $ egrep "^OPTIONS" /etc/sysconfig/chronyd | cut -d'=' -f2
 "-4"
 ```
 
-#### 接続サーバのIPアドレスを修正する
+#### 10-2. 接続サーバのIPアドレスを変更する
 
 ```bash
 $ 
@@ -498,9 +500,9 @@ $ systemctl restart chronyd
 $ systemctl status chronyd
 ```
 
-### crond
+### 11. crond
 
-#### メール送信を無効化する
+#### 11-1. メール送信を無効化する
 
 ```bash
 $ sed -i 's/CRONDARGS=/CRONDARGS="-m off"/' /etc/sysconfig/crond
@@ -517,7 +519,7 @@ $ systemctl restart crond
 $ systemctl status crond
 ```
 
-#### "crontab"を修正する
+#### 11-2. "crontab"を定期ジョブを追記する
 
 ```bash
 $ 
@@ -526,9 +528,9 @@ $
 $ 
 ```
 
-### firewalld
+### 12. firewalld
 
-#### "public zone"にルールを追加する
+#### 12-1. "public zone"にルールを追加する
 
 ```bash
 $ cp -p ./public.xml /etc/firewalld/zone/public.xml
@@ -538,9 +540,9 @@ $ firewall-cmd --reload
 $ 
 ```
 
-### sshd
+### 13. sshd
 
-#### 
+#### 13-1. rootユーザのログイン認証を公開鍵認証のみに変更する
 
 ```bash
 $ sed -i '/^PermitRootLogin/s/yes/without-password/' /etc/ssh/sshd_config
@@ -557,9 +559,9 @@ $ systemctl restart sshd
 $ systemctl status sshd
 ```
 
-### SELinux
+### 14. SELinux
 
-#### SELinuxを無効化する
+#### 14-1. SELinuxを無効化する
 
 ```bash
 $ sed -i '/^SELINUX=/s/enforcing/disabled/' /etc/selinux/config
