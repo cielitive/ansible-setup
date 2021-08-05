@@ -484,39 +484,38 @@ $ cat goss.yaml
 #### 6-1. ディレクトリを作成する
 
 ```bash
-$ mkdir -p /var/opt
-$ mkdir -p /var/backup
-$ mkdir -p /var/logs
-$ mkdir -p /var/work
 $ mkdir -p /var/scripts
-
-$ chmod -R 755 /var/opt
+$ mkdir -p /var/backup
+$ chmod -R 755 /var/scripts
 $ chmod -R 755 /var/backup
-$ chmod -R 755 /var/logs
-$ chmod -R 777 /var/work
-$ chmod -R 777 /var/scripts
-
-$ chown root:root /var/opt
-$ chown root:root /var/backup
-$ chown root:root /var/logs
-$ chown root:root /var/work
 $ chown root:root /var/scripts
+$ chown root:root /var/backup
 
 ### check
-$ ls -d /var/opt
-/var/opt
-$ ls -d /var/backup
-/infra/backup
-$ ls -d /var/logs
-/infra/logs
-$ ls -d /var/work
-/infra/work
 $ ls -d /var/scripts
 /infra/scripts
 
 ### goss
-$ 
+$ goss add file /var/scripts
+$ goss add file /var/backup
 $ cat goss.yaml
+file:
+  /var/backup:
+    exists: true
+    mode: "0755"
+    size: 6
+    owner: root
+    group: root
+    filetype: directory
+    contains: []
+  /var/scripts:
+    exists: true
+    mode: "0755"
+    size: 6
+    owner: root
+    group: root
+    filetype: directory
+    contains: []
 ```
 
 ## 7. カーネル
@@ -532,8 +531,11 @@ $ sysctl -n kernel.watchdog
 0
 
 ### goss
-$ 
+$ goss add kernel-param kernel.watchdog
 $ cat goss.yaml
+kernel-param:
+  kernel.watchdog:
+    value: "0"
 ```
 
 #### 7-2. ユーザのリソース制限を変更する
@@ -551,14 +553,42 @@ $ grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nofile' | awk '{
 10000
 $ grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nofile' | awk '{print $4}'
 10000
-$ grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nproc"'| awk '{print $4}'
+$ grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nproc' | awk '{print $4}'
 10000
-$ grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nproc"'| awk '{print $4}'
+$ grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nproc' | awk '{print $4}'
 10000
 
 ### goss
-$ 
+$ goss add command "grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nofile' | awk '{print \$4}'"
+$ goss add command "grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nofile' | awk '{print \$4}'"
+$ goss add command "grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nproc' | awk '{print \$4}'"
+$ goss add command "grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nproc' | awk '{print \$4}'"
 $ cat goss.yaml
+command:
+  grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nofile' | awk '{print $4}':
+    exit-status: 0
+    stdout:
+    - "10000"
+    stderr: []
+    timeout: 10000
+  grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nproc' | awk '{print $4}':
+    exit-status: 0
+    stdout:
+    - "10000"
+    stderr: []
+    timeout: 10000
+  grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nofile' | awk '{print $4}':
+    exit-status: 0
+    stdout:
+    - "10000"
+    stderr: []
+    timeout: 10000
+  grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nproc' | awk '{print $4}':
+    exit-status: 0
+    stdout:
+    - "10000"
+    stderr: []
+    timeout: 10000
 ```
 
 ## 8. ネットワーク
