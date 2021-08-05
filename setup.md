@@ -609,8 +609,24 @@ WWAN
 無効
 
 ### goss
-$ 
+$ goss add command "nmcli radio all | awk '{print \$2}'"
+$ goss add command "nmcli radio all | awk '{print \$4}'"
 $ cat goss.yaml
+command:
+  nmcli radio all | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - WIFI
+    - 無効
+    stderr: []
+    timeout: 10000
+  nmcli radio all | awk '{print $4}':
+    exit-status: 0
+    stdout:
+    - WWAN
+    - 無効
+    stderr: []
+    timeout: 10000
 ```
 
 #### 8-2. 仮想ブリッチを無効化する
@@ -628,8 +644,12 @@ $ systemctl is-active libvirtd
 inactive
 
 ### goss
-$ 
+$ goss add service libvirtd
 $ cat goss.yaml
+service:
+  libvirtd:
+    enabled: false
+    running: false
 ```
 
 #### 8-3. スタティック・ルーティングを追加する
@@ -670,8 +690,16 @@ $ cat /etc/NetworkManager/conf.d/90-dns-none.conf
 dns=none
 
 ### goss
-$ 
+$ goss add command "cat /etc/NetworkManager/conf.d/90-dns-none.conf"
 $ cat goss.yaml
+command:
+  cat /etc/NetworkManager/conf.d/90-dns-none.conf:
+    exit-status: 0
+    stdout:
+    - '[main]'
+    - dns=none
+    stderr: []
+    timeout: 10000
 ```
 
 ```bash
@@ -684,8 +712,12 @@ $ systemctl is-active NetworkManager
 active
 
 ### goss
-$ 
+$ goss add service NetworkManager
 $ cat goss.yaml
+service:
+  NetworkManager:
+    enabled: true
+    running: true
 ```
 
 #### 8-5. "hosts"ファイルにレコードを追加する
@@ -710,13 +742,21 @@ nameserver 192.168.2.38
 EOT
 
 ### check
-$ egrep "^nameserver" /etc/resolv.conf
+$ egrep '^nameserver (192.168.2.39|192.168.2.38)' /etc/resolv.conf
 nameserver 192.168.2.39
 nameserver 192.168.2.38
 
 ### goss
-$ 
+$ goss add command "egrep '^nameserver (192.168.2.39|192.168.2.38)' /etc/resolv.conf"
 $ cat goss.yaml
+command:
+  egrep '^nameserver (192.168.2.39|192.168.2.38)' /etc/resolv.conf:
+    exit-status: 0
+    stdout:
+    - nameserver 192.168.2.39
+    - nameserver 192.168.2.38
+    stderr: []
+    timeout: 10000
 ```
 
 #### 8-7. 名前解決順を変更する
@@ -730,8 +770,15 @@ $ egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo
 files dns
 
 ### goss
-$ 
+$ goss add command "egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo"
 $ cat goss.yaml
+command:
+  egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print }' | xargs echo:
+    exit-status: 0
+    stdout:
+    - 'hosts: files dns'
+    stderr: []
+    timeout: 10000
 ```
 
 ## 9. tcpdump
@@ -746,8 +793,17 @@ $ ls -d /tcpdump/tcpdump_app
 /tcpdump/tcpdump_app
 
 ### goss
-$ 
+$ goss add file /tcpdump/tcpdump_app
 $ cat goss.yaml
+file:
+  /tcpdump/tcpdump_app:
+    exists: true
+    mode: "0755"
+    size: 6
+    owner: root
+    group: root
+    filetype: directory
+    contains: []
 ```
 
 #### 9-2. tcpdumpサービスのunitファイルを追加する
