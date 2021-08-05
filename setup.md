@@ -7,10 +7,10 @@ $ systemctl disable display-manager
 Removed /etc/systemd/system/display-manager.service.
 
 ### check (after reboot)
-$ systemctl is-active gdm
-inactive
 $ systemctl is-enabled gdm
 disabled
+$ systemctl is-active gdm
+inactive
 ```
 
 #### 1-2. "X Window System"起動時のデフォルト言語を日本語にする
@@ -20,8 +20,18 @@ $ /usr/bin/startx
 LANG=ja_JP.UTF-8
 
 ### check
-$ egrep "^LANG" /usr/bin/startx | cut -d'=' -f2
+$ egrep '^LANG' /usr/bin/startx | cut -d'=' -f2
 ja_JP.UTF-8
+
+### goss
+$ goss add command "egrep '^LANG' /usr/bin/startx | cut -d'=' -f2"
+command:
+  egrep '^LANG' /usr/bin/startx | cut -d'=' -f2:
+    exit-status: 0
+    stdout:
+    - ja_JP.UTF-8
+    stderr: []
+    timeout: 10000
 ```
 
 #### 1-3. "Ctrl-Alt-Del"によるサーバ再起動を無効化する
@@ -39,7 +49,7 @@ masked
 $ sed -i 's/#CtrlAltDelBurstAction=reboot-force/CtrlAltDelBurstAction=none/' /etc/systemd/system.conf
 
 ### check
-$ egrep "^CtrlAltDelBurstAction" /etc/systemd/system.conf | cut -d'=' -f2
+$ egrep '^CtrlAltDelBurstAction '/etc/systemd/system.conf | cut -d'=' -f2
 none
 ```
 
@@ -137,9 +147,9 @@ $ cat /etc/pam.d/fingerprint-auth
 $ sed -i '/^PASS_MIN_LEN/s/5/8/' /etc/login.defs
 
 ### check
-$ egrep "^PASS_MAX_DAYS" /etc/login.defs | awk '{print $2}'
+$ egrep '^PASS_MAX_DAYS' /etc/login.defs | awk '{print $2}'
 99999
-$ egrep "^PASS_MIN_LEN" /etc/login.defs | awk '{print $2}'
+$ egrep '^PASS_MIN_LEN' /etc/login.defs | awk '{print $2}'
 8
 ```
 
@@ -162,7 +172,7 @@ password    sufficient    pam_unix.so sha512 shadow try_first_pass use_authtok r
 $ sed -i '/#auth\s\+required/s/^#//' /etc/pam.d/su
 
 ### check
-$ cat /etc/pam.d/su | egrep "^auth\s+required\s+pam_wheel.so\suse_uid"
+$ egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su
 auth           required        pam_wheel.so use_uid
 ```
 
@@ -170,7 +180,7 @@ auth           required        pam_wheel.so use_uid
 $ echo "auth           required        pam_wheel.so use_uid" >>/etc/pam.d/su-l
 
 ### check
-$ cat /etc/pam.d/su-l | egrep "^auth\s+required\s+pam_wheel.so\suse_uid"
+$ egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su-l
 auth           required        pam_wheel.so use_uid
 ```
 
@@ -205,7 +215,7 @@ $
 $ groupadd -g 3003 ansible
 
 ### check
-$ cat /etc/group | egrep "^ansible:"
+$ cat /etc/group | egrep '^ansible:'
 ansible:x:1000:
 ```
 
@@ -225,9 +235,9 @@ uid=1000(ansible) gid=1000(ansible) groups=1000(ansible),10(wheel)
 $ echo "ansible       ALL=(ALL)       NOPASSWD: /usr/bin/systemctl * sshd" >>/etc/sudoers
 
 ### check
-$ egrep "^ansible" /etc/sudoers | awk '{print $2}'
+$ egrep '^ansible' /etc/sudoers | awk '{print $2}'
 ALL=(ALL)
-$ egrep "^ansible" /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-
+$ egrep '^ansible' /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-
 NOPASSWD: usr/bin/systemctl * sshd
 ```
 
@@ -241,9 +251,9 @@ export PATH=\$PATH:/usr/java/defalut/lib
 EOT
 
 ### check
-$ egrep "^export LANG=" /home/ansible/.bash_profile
+$ egrep '^export LANG=' /home/ansible/.bash_profile
 export LANG=ja_JP
-$ egrep "^export PATH=" /home/ansible/.bash_profile
+$ egrep '^export PATH=' /home/ansible/.bash_profile
 export PATH=$PATH:/usr/java/defalut/lib
 ```
 
@@ -288,7 +298,7 @@ $ ls -d /var/scripts
 #### 6-1. カーネル・パラメータを追加、修正する
 
 ```bash
-$ echo "kernel.watchdog = 0" >>/etc/sysctl.conf
+$ echo 'kernel.watchdog = 0' >>/etc/sysctl.conf
 $ sysctl -p
 
 ### check
@@ -307,13 +317,13 @@ apache  hard    nproc   10000
 EOT
 
 ### check
-$ grep "apache" /etc/security/limits.conf | grep "soft" | grep "nofile" | awk '{print $4}'
+$ grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nofile' | awk '{print $4}'
 10000
-$ grep "apache" /etc/security/limits.conf | grep "hard" | grep "nofile" | awk '{print $4}'
+$ grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nofile' | awk '{print $4}'
 10000
-$ grep "apache" /etc/security/limits.conf | grep "soft" | grep "nproc" | awk '{print $4}'
+$ grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nproc"'| awk '{print $4}'
 10000
-$ grep "apache" /etc/security/limits.conf | grep "hard" | grep "nproc" | awk '{print $4}'
+$ grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nproc"'| awk '{print $4}'
 10000
 ```
 
@@ -344,22 +354,33 @@ Removed /etc/systemd/system/sockets.target.wants/virtlogd.socket.
 Removed /etc/systemd/system/sockets.target.wants/virtlockd.socket.
 
 ### check
-$ systemctl is-active libvirtd
-inactive
 $ systemctl is-enabled libvirtd
 disabled
+$ systemctl is-active libvirtd
+inactive
 ```
 
 #### 7-3. スタティック・ルーティングを追加する
 
 ```bash
-$ nmcli connection modify enp0s9 +ipv4.routes "192.0.2.0/24 198.51.100.1"
-$ nmcli connection modify enp0s9 +ipv4.routes "192.0.3.0/24 198.51.100.1"
+$ nmcli connection modify enp0s9 +ipv4.routes '192.0.2.0/24 198.51.100.1'
+$ nmcli connection modify enp0s9 +ipv4.routes '192.0.3.0/24 198.51.100.1'
 
 ### check
 $ nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print $2}' | xargs echo | sed 's/;\s/\n/'
 { ip = 192.0.2.0/24, nh = 198.51.100.1 }
 { ip = 192.0.3.0/24, nh = 198.51.100.1 }
+
+### goss
+$ goss add command "nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print \$2}' | xargs echo | sed 's/;\s/\n/'"
+command:
+  nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print $2}' | xargs echo | sed 's/;\s/\n/':
+    exit-status: 0
+    stdout:
+    - '{ ip = 192.0.2.0/24, nh = 198.51.100.1 }'
+    - '{ ip = 192.0.3.0/24, nh = 198.51.100.1 }'
+    stderr: []
+    timeout: 10000
 ```
 
 #### 7-4. NetworkManagerの名前解決機能を無効化する
@@ -380,10 +401,10 @@ dns=none
 $ systemctl reload NetworkManager
 
 ### check
-$ systemctl is-active NetworkManager
-active
 $ systemctl is-enabled NetworkManager
 enabled
+$ systemctl is-active NetworkManager
+active
 ```
 
 #### 7-5. "hosts"ファイルにレコードを追加する
@@ -416,7 +437,7 @@ nameserver 192.168.2.38
 $ sed -i '/^hosts:/s/files dns myhostname/files dns/' /etc/nsswitch.conf
 
 ### check
-$ egrep "^hosts" /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo
+$ egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo
 files dns
 ```
 
@@ -461,10 +482,10 @@ EOT
 $ systemctl deamon-reload
 
 ### check
-$ systemctl is-active tcpdump_app
-active
 $ systemctl is-enabled tcpdump_app
 enabled
+$ systemctl is-active tcpdump_app
+active
 ```
 
 ### 9. systemd-journald
@@ -475,7 +496,7 @@ enabled
 $ sed -i 's/^#LogLevel=info/LogLevel=notice/' /etc/systemd/system.conf
 
 ### check
-$ egrep "^LogLevel" /etc/systemd/system.conf | cut -d'=' -f2
+$ egrep '^LogLevel' /etc/systemd/system.conf | cut -d'=' -f2
 notice
 ```
 
@@ -487,11 +508,11 @@ $ sed -i 's/#RateLimitBurst=10000/RateLimitBurst=0/' /etc/systemd/journald.conf
 $ sed -i 's/#SystemMaxUse=/SystemMaxUse=/' /etc/systemd/journald.conf
 
 ### check
-$ egrep "RateLimitIntervalSec" /etc/systemd/journald.conf | cut -d'=' -f2
+$ egrep 'RateLimitIntervalSec' /etc/systemd/journald.conf | cut -d'=' -f2
 0
-$ egrep "RateLimitBurst" /etc/systemd/journald.conf | cut -d'=' -f2
+$ egrep 'RateLimitBurst' /etc/systemd/journald.conf | cut -d'=' -f2
 0
-$ egrep "SystemMaxUse" /etc/systemd/journald.conf | cut -d'=' -f2
+$ egrep 'SystemMaxUse' /etc/systemd/journald.conf | cut -d'=' -f2
 
 ```
 
@@ -510,10 +531,10 @@ $ ls -d /var/log/journal
 $ systemctl restart systemd-journald
 
 ### check
-$ systemctl is-active systemd-journald
-active
 $ systemctl is-enabled systemd-journald
 static
+$ systemctl is-active systemd-journald
+active
 ```
 
 ### 10. chronyd
@@ -524,7 +545,7 @@ static
 $ sed -i 's/OPTIONS=""/OPTIONS="-4"/' /etc/sysconfig/chronyd
 
 ### check
-$ egrep "^OPTIONS" /etc/sysconfig/chronyd | cut -d'=' -f2
+$ egrep '^OPTIONS' /etc/sysconfig/chronyd | cut -d'=' -f2
 "-4"
 ```
 
@@ -541,10 +562,10 @@ $ egrep "" /etc/chrony.conf
 $ systemctl restart chronyd
 
 ### check
-$ systemctl is-active chronyd
-active
 $ systemctl is-enabled chronyd
 enabled
+$ systemctl is-active chronyd
+active
 ```
 
 ### 11. crond
@@ -555,18 +576,28 @@ enabled
 $ sed -i 's/CRONDARGS=/CRONDARGS="-m off"/' /etc/sysconfig/crond
 
 ### check
-$ egrep "^CRONDARGS" /etc/sysconfig/crond | cut -d'=' -f2
+$ egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2
 "-m off"
+
+### goss
+$ goss add command "egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2"
+command:
+  egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2:
+    exit-status: 0
+    stdout:
+    - '"-m off"'
+    stderr: []
+    timeout: 10000
 ```
 
 ```bash
 $ systemctl restart crond
 
 ### check
-$ systemctl is-active crond
-active
 $ systemctl is-enabled crond
 enabled
+$ systemctl is-active crond
+active
 ```
 
 #### 11-2. "crontab"を定期ジョブを追記する
@@ -589,10 +620,10 @@ $ firewall-cmd --reload
 ### check
 $ 
 
-$ systemctl is-active firewalld
-active
 $ systemctl is-enabled firewalld
 enabled
+$ systemctl is-active firewalld
+active
 ```
 
 ### 13. sshd
@@ -607,9 +638,9 @@ $ egrep "^PermitRootLogin" /etc/ssh/sshd_config | cut -d' ' -f2
 without-password
 
 ### goss
-$ goss add command "egrep \"^PermitRootLogin\" /etc/ssh/sshd_config | cut -d' ' -f2"
+$ goss add command "egrep '^PermitRootLogin' /etc/ssh/sshd_config | cut -d' ' -f2"
 command:
-  egrep "^PermitRootLogin" /etc/ssh/sshd_config | cut -d' ' -f2:
+  egrep '^PermitRootLogin' /etc/ssh/sshd_config | cut -d' ' -f2:
     exit-status: 0
     stdout:
     - without-password
@@ -621,10 +652,10 @@ command:
 $ systemctl restart sshd
 
 ### check
-$ systemctl is-active sshd
-active
 $ systemctl is-enabled sshd
 enabled
+$ systemctl is-active sshd
+active
 
 ### goss
 $ goss add service sshd
