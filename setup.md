@@ -605,6 +605,16 @@ $ sed -i '/^PermitRootLogin/s/yes/without-password/' /etc/ssh/sshd_config
 ### check
 $ egrep "^PermitRootLogin" /etc/ssh/sshd_config | cut -d' ' -f2
 without-password
+
+### goss
+$ goss add command "egrep \"^PermitRootLogin\" /etc/ssh/sshd_config | cut -d' ' -f2"
+command:
+  egrep "^PermitRootLogin" /etc/ssh/sshd_config | cut -d' ' -f2:
+    exit-status: 0
+    stdout:
+    - without-password
+    stderr: []
+    timeout: 10000
 ```
 
 ```bash
@@ -615,6 +625,13 @@ $ systemctl is-active sshd
 active
 $ systemctl is-enabled sshd
 enabled
+
+### goss
+$ goss add service sshd
+service:
+  sshd:
+    enabled: true
+    running: true
 ```
 
 ### 14. SELinux
@@ -630,4 +647,14 @@ disabled
 
 $ getenforce 
 Disabled
+
+### goss
+$ goss add command getenforce
+command:
+  getenforce:
+    exit-status: 0
+    stdout:
+    - Disabled
+    stderr: []
+    timeout: 10000
 ```
