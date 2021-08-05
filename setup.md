@@ -241,8 +241,14 @@ $ cat /etc/pam.d/fingerprint-auth
 # Do not modify this file manually.
 
 ### goss
-$ 
+$ goss add command "authselect current | grep with-fingerprint"
 $ cat goss.yaml
+command:
+  authselect current | grep with-fingerprint:
+    exit-status: 1
+    stdout: []
+    stderr: []
+    timeout: 10000
 ```
 
 #### 3-2. パスワードポリシーを変更する
@@ -257,25 +263,55 @@ $ egrep '^PASS_MIN_LEN' /etc/login.defs | awk '{print $2}'
 8
 
 ### goss
-$ 
+$ goss add command "egrep '^PASS_MAX_DAYS' /etc/login.defs | awk '{print \$2}'"
+$ goss add command "egrep '^PASS_MIN_LEN' /etc/login.defs | awk '{print \$2}'"
 $ cat goss.yaml
+command:
+  egrep '^PASS_MAX_DAYS' /etc/login.defs | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - "99999"
+    stderr: []
+    timeout: 10000
+  egrep '^PASS_MIN_LEN' /etc/login.defs | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - "8"
+    stderr: []
+    timeout: 10000
 ```
 
 #### 3-3. PAM認証ポリシーを変更する
 
 ```bash
-$ sed -i '' /etc/pam.d/system-auth
-$ sed -i '' /etc/pam.d/system-auth
+$ sed -i '/^password\s\+requisite\s\+pam_pwquality.so/s/pam_pwquality.so try_first_pass local_users_only/pam_pwquality.so try_first_pass local_users_only retry=3 authtok_type= minclass=4/' /etc/pam.d/system-auth
+$ sed -i '/^password\s\+sufficient\s\+pam_unix.so/s/pam_unix.so sha512 shadow nullok try_first_pass use_authtok/pam_unix.so sha512 shadow try_first_pass use_authtok remember=4/' /etc/pam.d/system-auth
 
 ### check
-$ 
+$ egrep '^password\s+requisite\s+pam_pwquality.so' /etc/pam.d/system-auth
 password    requisite     pam_pwquality.so try_first_pass local_users_only retry=3 authtok_type= minclass=4
-$
+$ egrep '^password\s+sufficient\s+pam_unix.so' /etc/pam.d/system-auth
 password    sufficient    pam_unix.so sha512 shadow try_first_pass use_authtok remember=4
 
 ### goss
-$ 
+$ goss add command "egrep '^password\s+requisite\s+pam_pwquality.so' /etc/pam.d/system-auth"
+$ goss add command "egrep '^password\s+sufficient\s+pam_unix.so' /etc/pam.d/system-auth"
 $ cat goss.yaml
+command:
+  egrep '^password\s+requisite\s+pam_pwquality.so' /etc/pam.d/system-auth:
+    exit-status: 0
+    stdout:
+    - password    requisite                                    pam_pwquality.so try_first_pass
+      local_users_only retry=3 authtok_type= minclass=4
+    stderr: []
+    timeout: 10000
+  egrep '^password\s+sufficient\s+pam_unix.so' /etc/pam.d/system-auth:
+    exit-status: 0
+    stdout:
+    - password    sufficient                                   pam_unix.so sha512
+      shadow try_first_pass use_authtok remember=4
+    stderr: []
+    timeout: 10000
 ```
 
 #### 3-4. "su", "su-"コマンドによるユーザ切り替えをwheelグループのみに制限する
@@ -288,8 +324,15 @@ $ egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su
 auth           required        pam_wheel.so use_uid
 
 ### goss
-$ 
+$ goss add command "egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su"
 $ cat goss.yaml
+command:
+  egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su:
+    exit-status: 0
+    stdout:
+    - "auth\t\trequired\tpam_wheel.so use_uid"
+    stderr: []
+    timeout: 10000
 ```
 
 ```bash
@@ -300,8 +343,15 @@ $ egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su-l
 auth           required        pam_wheel.so use_uid
 
 ### goss
-$ 
+$ goss add command "egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su-l"
 $ cat goss.yaml
+command:
+  egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su-l:
+    exit-status: 0
+    stdout:
+    - auth           required        pam_wheel.so use_uid
+    stderr: []
+    timeout: 10000
 ```
 
 ## 4. ディスク
@@ -318,8 +368,22 @@ $ cat /sys/class/scsi_generic/sg1/device/timeout
 30
 
 ### goss
-$ 
+$ goss add command "cat /sys/class/scsi_generic/sg0/device/timeout"
+$ goss add command "cat /sys/class/scsi_generic/sg1/device/timeout"
 $ cat goss.yaml
+command:
+  cat /sys/class/scsi_generic/sg0/device/timeout:
+    exit-status: 0
+    stdout:
+    - "30"
+    stderr: []
+    timeout: 10000
+  cat /sys/class/scsi_generic/sg1/device/timeout:
+    exit-status: 0
+    stdout:
+    - "30"
+    stderr: []
+    timeout: 10000
 ```
 
 #### 4-2. 論理ボリュームを作成する
@@ -347,8 +411,12 @@ $ cat /etc/group | egrep '^ansible:'
 ansible:x:1000:
 
 ### goss
-$ 
+$ goss add group ansible
 $ cat goss.yaml
+group:
+  ansible:
+    exists: true
+    gid: 1000
 ```
 
 #### 5-2. ユーザを作成する
@@ -361,8 +429,18 @@ $ id ansible
 uid=1000(ansible) gid=1000(ansible) groups=1000(ansible),10(wheel)
 
 ### goss
-$ 
+$ goss add user ansible
 $ cat goss.yaml
+user:
+  ansible:
+    exists: true
+    uid: 1000
+    gid: 1000
+    groups:
+    - ansible
+    - wheel
+    home: /home/ansible
+    shell: /bin/bash
 ```
 
 #### 5-3. 特定のコマンドのみ実行できるよう、sudo権限を追加する
@@ -375,6 +453,10 @@ $ egrep '^ansible' /etc/sudoers | awk '{print $2}'
 ALL=(ALL)
 $ egrep '^ansible' /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-
 NOPASSWD: usr/bin/systemctl * sshd
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 #### 5-4. ".bash_profile"に環境変数を追記する
@@ -391,6 +473,10 @@ $ egrep '^export LANG=' /home/ansible/.bash_profile
 export LANG=ja_JP
 $ egrep '^export PATH=' /home/ansible/.bash_profile
 export PATH=$PATH:/usr/java/defalut/lib
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 ## 6. ディレクトリ・ファイル
@@ -427,6 +513,10 @@ $ ls -d /var/work
 /infra/work
 $ ls -d /var/scripts
 /infra/scripts
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 ## 7. カーネル
@@ -440,6 +530,10 @@ $ sysctl -p
 ### check
 $ sysctl -n kernel.watchdog
 0
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 #### 7-2. ユーザのリソース制限を変更する
@@ -461,6 +555,10 @@ $ grep 'apache' /etc/security/limits.conf | grep 'soft' | grep 'nproc"'| awk '{p
 10000
 $ grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nproc"'| awk '{print $4}'
 10000
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 ## 8. ネットワーク
@@ -479,6 +577,10 @@ WIFI
 $ nmcli radio all | awk '{print $4}'
 WWAN
 無効
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 #### 8-2. 仮想ブリッチを無効化する
@@ -494,6 +596,10 @@ $ systemctl is-enabled libvirtd
 disabled
 $ systemctl is-active libvirtd
 inactive
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 #### 8-3. スタティック・ルーティングを追加する
@@ -532,6 +638,10 @@ EOT
 $ cat /etc/NetworkManager/conf.d/90-dns-none.conf
 [main]
 dns=none
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 ```bash
@@ -542,6 +652,10 @@ $ systemctl is-enabled NetworkManager
 enabled
 $ systemctl is-active NetworkManager
 active
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 #### 8-5. "hosts"ファイルにレコードを追加する
@@ -551,6 +665,10 @@ $ echo "" >>/etc/hosts
 
 ### check
 $ egrep "^" /etc/hosts
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 #### 8-6. ネームサーバを追加する
@@ -565,6 +683,10 @@ EOT
 $ egrep "^nameserver" /etc/resolv.conf
 nameserver 192.168.2.39
 nameserver 192.168.2.38
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 #### 8-7. 名前解決順を変更する
@@ -576,6 +698,10 @@ $ sed -i '/^hosts:/s/files dns myhostname/files dns/' /etc/nsswitch.conf
 ### check
 $ egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo
 files dns
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 ## 9. tcpdump
@@ -588,6 +714,10 @@ $ mkdir -p /tcpdump/tcpdump_app
 ### check
 $ ls -d /tcpdump/tcpdump_app
 /tcpdump/tcpdump_app
+
+### goss
+$ 
+$ cat goss.yaml
 ```
 
 #### 9-2. tcpdumpサービスのunitファイルを追加する
@@ -623,6 +753,14 @@ $ systemctl is-enabled tcpdump_app
 enabled
 $ systemctl is-active tcpdump_app
 active
+
+### goss
+$ goss add service tcpdump_app
+$ cat goss.yaml 
+service:
+  tcpdump_app:
+    enabled: true
+    running: true
 ```
 
 ## 10. systemd-journald
