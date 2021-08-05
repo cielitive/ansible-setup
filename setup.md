@@ -197,9 +197,35 @@ file:
     contains: []
 ```
 
-### 2. システム認証・認証セキュリティ
+### 2. パッケージ
 
-#### 2-1. 指紋リーダーによる認証を無効化する
+#### 2-1 追加パッケージをインストールする
+
+```bash
+### 
+$ rpm -ivh sshpass-1.06-9.el8.x86_64.rpm
+Verifying...                          ################################# [100%]
+Preparing...                          ################################# [100%]
+Updating / installing...
+   1:sshpass-1.06-9.el8               ################################# [100%]
+
+### check
+$ rpm -qa | grep sshpass
+sshpass-1.06-9.el8.x86_64
+
+### goss
+$ goss add package sshpass
+$ cat goss.yaml
+package:
+  sshpass:
+    installed: true
+    versions:
+    - "1.06"
+```
+
+### 3. システム認証・認証セキュリティ
+
+#### 3-1. 指紋リーダーによる認証を無効化する
 
 ```bash
 $ authselect disable-feature with-fingerprint
@@ -219,7 +245,7 @@ $
 $ cat goss.yaml
 ```
 
-#### 2-2. パスワードポリシーを変更する
+#### 3-2. パスワードポリシーを変更する
 
 ```bash
 $ sed -i '/^PASS_MIN_LEN/s/5/8/' /etc/login.defs
@@ -235,7 +261,7 @@ $
 $ cat goss.yaml
 ```
 
-#### 2-3. PAM認証ポリシーを変更する
+#### 3-3. PAM認証ポリシーを変更する
 
 ```bash
 $ sed -i '' /etc/pam.d/system-auth
@@ -252,7 +278,7 @@ $
 $ cat goss.yaml
 ```
 
-#### 2-4. "su", "su-"コマンドによるユーザ切り替えをwheelグループのみに制限する
+#### 3-4. "su", "su-"コマンドによるユーザ切り替えをwheelグループのみに制限する
 
 ```bash
 $ sed -i '/#auth\s\+required/s/^#//' /etc/pam.d/su
@@ -278,9 +304,9 @@ $
 $ cat goss.yaml
 ```
 
-### 3. ディスク
+### 4. ディスク
 
-#### 3-1. ディスクタイムアウト値を変更する
+#### 4-1. ディスクタイムアウト値を変更する
 
 ```bash
 $ echo 30 | tee /sys/class/scsi_generic/sg0/device/timeout /sys/class/scsi_generic/sg1/device/timeout 1>/dev/null
@@ -296,7 +322,7 @@ $
 $ cat goss.yaml
 ```
 
-#### 3-2. 論理ボリュームを作成する
+#### 4-2. 論理ボリュームを作成する
 
 ```bash
 $ 
@@ -309,9 +335,9 @@ $
 $ cat goss.yaml
 ```
 
-### 4. グループ・ユーザ
+### 5. グループ・ユーザ
 
-#### 4-1. グループを作成する
+#### 5-1. グループを作成する
 
 ```bash
 $ groupadd -g 3003 ansible
@@ -325,7 +351,7 @@ $
 $ cat goss.yaml
 ```
 
-#### 4-2. ユーザを作成する
+#### 5-2. ユーザを作成する
 
 ```bash
 $ useradd -u 1000 -g ansible -m -d /home/ansible -s /bin/bash ansible
@@ -339,7 +365,7 @@ $
 $ cat goss.yaml
 ```
 
-#### 4-3. 特定のコマンドのみ実行できるよう、sudo権限を追加する
+#### 5-3. 特定のコマンドのみ実行できるよう、sudo権限を追加する
 
 ```bash
 $ echo "ansible       ALL=(ALL)       NOPASSWD: /usr/bin/systemctl * sshd" >>/etc/sudoers
@@ -351,7 +377,7 @@ $ egrep '^ansible' /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-
 NOPASSWD: usr/bin/systemctl * sshd
 ```
 
-#### 4-4. ".bash_profile"に環境変数を追記する
+#### 5-4. ".bash_profile"に環境変数を追記する
 
 ```bash
 $ cat <<EOT >>/home/ansible/.bash_profile
@@ -367,9 +393,9 @@ $ egrep '^export PATH=' /home/ansible/.bash_profile
 export PATH=$PATH:/usr/java/defalut/lib
 ```
 
-### 5. ディレクトリ・ファイル
+### 6. ディレクトリ・ファイル
 
-#### 5-1. ディレクトリを作成する
+#### 6-1. ディレクトリを作成する
 
 ```bash
 $ mkdir -p /var/opt
@@ -403,9 +429,9 @@ $ ls -d /var/scripts
 /infra/scripts
 ```
 
-### 6. カーネル
+### 7. カーネル
 
-#### 6-1. カーネル・パラメータを追加、修正する
+#### 7-1. カーネル・パラメータを追加、修正する
 
 ```bash
 $ echo 'kernel.watchdog = 0' >>/etc/sysctl.conf
@@ -416,7 +442,7 @@ $ sysctl -n kernel.watchdog
 0
 ```
 
-#### 6-2. ユーザのリソース制限を変更する
+#### 7-2. ユーザのリソース制限を変更する
 
 ```bash
 $ cat <<EOT >/etc/security/limits.conf
@@ -437,9 +463,9 @@ $ grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nproc"'| awk '{p
 10000
 ```
 
-### 7. ネットワーク
+### 8. ネットワーク
 
-#### 7-1. 無線LANを無効化する
+#### 8-1. 無線LANを無効化する
 
 ```bash
 $ nmcli radio wifi off
@@ -455,7 +481,7 @@ WWAN
 無効
 ```
 
-#### 7-2. 仮想ブリッチを無効化する
+#### 8-2. 仮想ブリッチを無効化する
 
 ```bash
 $ systemctl disable --now libvirtd
@@ -470,7 +496,7 @@ $ systemctl is-active libvirtd
 inactive
 ```
 
-#### 7-3. スタティック・ルーティングを追加する
+#### 8-3. スタティック・ルーティングを追加する
 
 ```bash
 $ nmcli connection modify enp0s9 +ipv4.routes '192.0.2.0/24 198.51.100.1'
@@ -494,7 +520,7 @@ command:
     timeout: 10000
 ```
 
-#### 7-4. NetworkManagerの名前解決機能を無効化する
+#### 8-4. NetworkManagerの名前解決機能を無効化する
 
 ```bash
 $ cat <<EOT >/etc/NetworkManager/conf.d/90-dns-none.conf
@@ -518,7 +544,7 @@ $ systemctl is-active NetworkManager
 active
 ```
 
-#### 7-5. "hosts"ファイルにレコードを追加する
+#### 8-5. "hosts"ファイルにレコードを追加する
 
 ```bash
 $ echo "" >>/etc/hosts
@@ -527,7 +553,7 @@ $ echo "" >>/etc/hosts
 $ egrep "^" /etc/hosts
 ```
 
-#### 7-6. ネームサーバを追加する
+#### 8-6. ネームサーバを追加する
 
 ```bash
 $ cat <<EOT >/etc/resolv.conf
@@ -541,7 +567,7 @@ nameserver 192.168.2.39
 nameserver 192.168.2.38
 ```
 
-#### 7-7. 名前解決順を変更する
+#### 8-7. 名前解決順を変更する
 
 ```bash
 # $ sed -i '/^hosts:/s/files dns myhostname/files/' /etc/nsswitch.conf
@@ -552,9 +578,9 @@ $ egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo
 files dns
 ```
 
-### 8. tcpdump
+### 9. tcpdump
 
-#### 8-1. ログ格納ディレクトリを作成する
+#### 9-1. ログ格納ディレクトリを作成する
 
 ```bash
 $ mkdir -p /tcpdump/tcpdump_app
@@ -564,7 +590,7 @@ $ ls -d /tcpdump/tcpdump_app
 /tcpdump/tcpdump_app
 ```
 
-### 8-2. tcpdumpサービスのunitファイルを追加する
+#### 9-2. tcpdumpサービスのunitファイルを追加する
 
 ```bash
 $ cat <<EOT >/etc/systemd/system/tcpdump_app.service
@@ -599,9 +625,9 @@ $ systemctl is-active tcpdump_app
 active
 ```
 
-### 9. systemd-journald
+### 10. systemd-journald
 
-#### 9-1. システムログレベルを変更する
+#### 10-1. システムログレベルを変更する
 
 ```bash
 $ sed -i 's/^#LogLevel=info/LogLevel=notice/' /etc/systemd/system.conf
@@ -611,7 +637,7 @@ $ egrep '^LogLevel' /etc/systemd/system.conf | cut -d'=' -f2
 notice
 ```
 
-#### 9-2. メッセージ出力レートの制限を変更する
+#### 10-2. メッセージ出力レートの制限を変更する
 
 ```bash
 $ sed -i 's/#RateLimitIntervalSec=30s/RateLimitIntervalSec=0/' /etc/systemd/journald.conf
@@ -627,7 +653,7 @@ $ egrep 'SystemMaxUse' /etc/systemd/journald.conf | cut -d'=' -f2
 
 ```
 
-#### 9-3. ジャーナルログを永続化する
+#### 10-3. ジャーナルログを永続化する
 
 ```bash
 $ mkdir /var/log/journal
@@ -648,9 +674,9 @@ $ systemctl is-active systemd-journald
 active
 ```
 
-### 10. chronyd
+### 11. chronyd
 
-#### 10-1. IPv4アドレスのみ解決するようにする
+#### 11-1. IPv4アドレスのみ解決するようにする
 
 ```bash
 $ sed -i 's/OPTIONS=""/OPTIONS="-4"/' /etc/sysconfig/chronyd
@@ -660,7 +686,7 @@ $ egrep '^OPTIONS' /etc/sysconfig/chronyd | cut -d'=' -f2
 "-4"
 ```
 
-#### 10-2. 接続サーバのIPアドレスを変更する
+#### 11-2. 接続サーバのIPアドレスを変更する
 
 ```bash
 $ sed -i 's///' /etc/chrony.conf
@@ -679,9 +705,9 @@ $ systemctl is-active chronyd
 active
 ```
 
-### 11. crond
+### 12. crond
 
-#### 11-1. メール送信を無効化する
+#### 12-1. メール送信を無効化する
 
 ```bash
 $ sed -i 's/CRONDARGS=/CRONDARGS="-m off"/' /etc/sysconfig/crond
@@ -712,7 +738,7 @@ $ systemctl is-active crond
 active
 ```
 
-#### 11-2. "crontab"を定期ジョブを追記する
+#### 12-2. "crontab"を定期ジョブを追記する
 
 ```bash
 $ 
@@ -721,9 +747,9 @@ $
 $ 
 ```
 
-### 12. firewalld
+### 13. firewalld
 
-#### 12-1. "public zone"にルールを追加する
+#### 13-1. "public zone"にルールを追加する
 
 ```bash
 $ cp -p ./public.xml /etc/firewalld/zone/public.xml
@@ -738,9 +764,9 @@ $ systemctl is-active firewalld
 active
 ```
 
-### 13. sshd
+### 14. sshd
 
-#### 13-1. rootユーザのログイン認証を公開鍵認証のみに変更する
+#### 14-1. rootユーザのログイン認証を公開鍵認証のみに変更する
 
 ```bash
 $ sed -i '/^PermitRootLogin/s/yes/without-password/' /etc/ssh/sshd_config
@@ -779,9 +805,9 @@ service:
     running: true
 ```
 
-### 14. SELinux
+### 15. SELinux
 
-#### 14-1. SELinuxを無効化する
+#### 15-1. SELinuxを無効化する
 
 ```bash
 $ sed -i '/^SELINUX=/s/enforcing/disabled/' /etc/selinux/config
