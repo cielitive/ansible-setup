@@ -25,6 +25,7 @@ ja_JP.UTF-8
 
 ### goss
 $ goss add command "egrep '^LANG' /usr/bin/startx | cut -d'=' -f2"
+$ cat goss.yaml 
 command:
   egrep '^LANG' /usr/bin/startx | cut -d'=' -f2:
     exit-status: 0
@@ -373,6 +374,7 @@ $ nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print $2}' | xargs echo
 
 ### goss
 $ goss add command "nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print \$2}' | xargs echo | sed 's/;\s/\n/'"
+$ cat goss.yaml 
 command:
   nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print $2}' | xargs echo | sed 's/;\s/\n/':
     exit-status: 0
@@ -581,6 +583,7 @@ $ egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2
 
 ### goss
 $ goss add command "egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2"
+$ cat goss.yaml 
 command:
   egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2:
     exit-status: 0
@@ -639,6 +642,7 @@ without-password
 
 ### goss
 $ goss add command "egrep '^PermitRootLogin' /etc/ssh/sshd_config | cut -d' ' -f2"
+$ cat goss.yaml 
 command:
   egrep '^PermitRootLogin' /etc/ssh/sshd_config | cut -d' ' -f2:
     exit-status: 0
@@ -659,6 +663,7 @@ active
 
 ### goss
 $ goss add service sshd
+$ cat goss.yaml 
 service:
   sshd:
     enabled: true
@@ -681,6 +686,7 @@ Disabled
 
 ### goss
 $ goss add command getenforce
+$ cat goss.yaml 
 command:
   getenforce:
     exit-status: 0
