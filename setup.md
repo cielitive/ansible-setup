@@ -223,7 +223,7 @@ package:
     - "1.06"
 ```
 
-### 3. システム認証・認証セキュリティ
+## 3. システム認証・認証セキュリティ
 
 #### 3-1. 指紋リーダーによる認証を無効化する
 
@@ -304,7 +304,7 @@ $
 $ cat goss.yaml
 ```
 
-### 4. ディスク
+## 4. ディスク
 
 #### 4-1. ディスクタイムアウト値を変更する
 
@@ -335,7 +335,7 @@ $
 $ cat goss.yaml
 ```
 
-### 5. グループ・ユーザ
+## 5. グループ・ユーザ
 
 #### 5-1. グループを作成する
 
@@ -393,7 +393,7 @@ $ egrep '^export PATH=' /home/ansible/.bash_profile
 export PATH=$PATH:/usr/java/defalut/lib
 ```
 
-### 6. ディレクトリ・ファイル
+## 6. ディレクトリ・ファイル
 
 #### 6-1. ディレクトリを作成する
 
@@ -429,7 +429,7 @@ $ ls -d /var/scripts
 /infra/scripts
 ```
 
-### 7. カーネル
+## 7. カーネル
 
 #### 7-1. カーネル・パラメータを追加、修正する
 
@@ -463,7 +463,7 @@ $ grep 'apache' /etc/security/limits.conf | grep 'hard' | grep 'nproc"'| awk '{p
 10000
 ```
 
-### 8. ネットワーク
+## 8. ネットワーク
 
 #### 8-1. 無線LANを無効化する
 
@@ -578,7 +578,7 @@ $ egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo
 files dns
 ```
 
-### 9. tcpdump
+## 9. tcpdump
 
 #### 9-1. ログ格納ディレクトリを作成する
 
@@ -625,7 +625,7 @@ $ systemctl is-active tcpdump_app
 active
 ```
 
-### 10. systemd-journald
+## 10. systemd-journald
 
 #### 10-1. システムログレベルを変更する
 
@@ -674,7 +674,7 @@ $ systemctl is-active systemd-journald
 active
 ```
 
-### 11. chronyd
+## 11. chronyd
 
 #### 11-1. IPv4アドレスのみ解決するようにする
 
@@ -705,7 +705,7 @@ $ systemctl is-active chronyd
 active
 ```
 
-### 12. crond
+## 12. crond
 
 #### 12-1. メール送信を無効化する
 
@@ -747,7 +747,7 @@ $
 $ 
 ```
 
-### 13. firewalld
+## 13. firewalld
 
 #### 13-1. "public zone"にルールを追加する
 
@@ -764,7 +764,7 @@ $ systemctl is-active firewalld
 active
 ```
 
-### 14. sshd
+## 14. sshd
 
 #### 14-1. rootユーザのログイン認証を公開鍵認証のみに変更する
 
@@ -805,7 +805,7 @@ service:
     running: true
 ```
 
-### 15. SELinux
+## 15. SELinux
 
 #### 15-1. SELinuxを無効化する
 
