@@ -5,7 +5,9 @@
 ```bash
 $ systemctl disable display-manager
 
-### check
+### check (after reboot)
+$ systemctl is-active gdm
+inactive
 $ systemctl is-enabled gdm
 disabled
 ```
@@ -104,14 +106,9 @@ $
 $ authselect disable-feature with-fingerprint
 
 ### check
-$ 
-```
+$ authselect current
 
-```bash
 $ cat /etc/pam.d/fingerprint-auth
-
-### check
-$ 
 ```
 
 #### 2-2. パスワードポリシーを変更する
@@ -205,28 +202,28 @@ uid=1000(ansible) gid=1000(ansible) groups=1000(ansible),10(wheel)
 #### 4-3. 特定のコマンドのみ実行できるよう、sudo権限を追加する
 
 ```bash
-$ echo "user01       ALL=(ALL)       NOPASSWD: /usr/bin/systemctl * sshd" >>/etc/sudoers
+$ echo "ansible       ALL=(ALL)       NOPASSWD: /usr/bin/systemctl * sshd" >>/etc/sudoers
 
 ### check
-$ egrep "^user01" /etc/sudoers | awk '{print $2}'
+$ egrep "^ansible" /etc/sudoers | awk '{print $2}'
 ALL=(ALL)
-$ egrep "^user01" /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-
+$ egrep "^ansible" /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-
 NOPASSWD: usr/bin/systemctl * sshd
 ```
 
 #### 4-4. ".bash_profile"に環境変数を追記する
 
 ```bash
-$ cat <<EOT >>/home/<user>/.bash_profile
+$ cat <<EOT >>/home/ansible/.bash_profile
 
 export LANG=ja_JP
 export PATH=\$PATH:/usr/java/defalut/lib
 EOT
 
 ### check
-$ egrep "^export LANG=" /home/<user>/.bash_profile
+$ egrep "^export LANG=" /home/ansible/.bash_profile
 export LANG=ja_JP
-$ egrep "^export PATH=" /home/<user>/.bash_profile
+$ egrep "^export PATH=" /home/ansible/.bash_profile
 export PATH=$PATH:/usr/java/defalut/lib
 ```
 
@@ -236,33 +233,33 @@ export PATH=$PATH:/usr/java/defalut/lib
 
 ```bash
 $ mkdir -p /var/opt
-$ mkdir -p /infra/backup
-$ mkdir -p /infra/logs
-$ mkdir -p /infra/work
-$ mkdir -p /infra/scripts
+$ mkdir -p /var/backup
+$ mkdir -p /var/logs
+$ mkdir -p /var/work
+$ mkdir -p /var/scripts
 
 $ chmod -R 755 /var/opt
-$ chmod -R 755 /infra/backup
-$ chmod -R 755 /infra/logs
-$ chmod -R 777 /infra/work
-$ chmod -R 777 /infra/scripts
+$ chmod -R 755 /var/backup
+$ chmod -R 755 /var/logs
+$ chmod -R 777 /var/work
+$ chmod -R 777 /var/scripts
 
 $ chown root:root /var/opt
-$ chown root:root /infra/backup
-$ chown root:root /infra/logs
-$ chown root:root /infra/work
-$ chown root:root /infra/scripts
+$ chown root:root /var/backup
+$ chown root:root /var/logs
+$ chown root:root /var/work
+$ chown root:root /var/scripts
 
 ### check
 $ ls -d /var/opt
 /var/opt
-$ ls -d /infra/backup
+$ ls -d /var/backup
 /infra/backup
-$ ls -d /infra/logs
+$ ls -d /var/logs
 /infra/logs
-$ ls -d /infra/work
+$ ls -d /var/work
 /infra/work
-$ ls -d /infra/scripts
+$ ls -d /var/scripts
 /infra/scripts
 ```
 
@@ -321,9 +318,11 @@ WWAN
 #### 7-2. 仮想ブリッチを無効化する
 
 ```bash
-$ systemctl disable libvirtd
+$ systemctl disable --now libvirtd
 
 ### check
+$ systemctl is-active libvirtd
+inactive
 $ systemctl is-enabled libvirtd
 disabled
 ```
@@ -382,7 +381,10 @@ files dns
 $ systemctl reload NetworkManager
 
 ### check
-$ systemctl status NetworkManager
+$ systemctl is-active NetworkManager
+active
+$ systemctl is-enabled NetworkManager
+enabled
 ```
 
 ### 8. tcpdump
@@ -426,7 +428,10 @@ EOT
 $ systemctl deamon-reload
 
 ### check
-$ systemctl status tcpdump_app
+$ systemctl is-active tcpdump_app
+active
+$ systemctl is-enabled tcpdump_app
+enabled
 ```
 
 ### 9. systemd-journald
@@ -472,7 +477,10 @@ $ ls -d /var/log/journal
 $ systemctl restart systemd-journald
 
 ### check
-$ systemctl status systemd-journald
+$ systemctl is-active systemd-journald
+active
+$ systemctl is-enabled systemd-journald
+static
 ```
 
 ### 10. chronyd
@@ -490,14 +498,20 @@ $ egrep "^OPTIONS" /etc/sysconfig/chronyd | cut -d'=' -f2
 #### 10-2. 接続サーバのIPアドレスを変更する
 
 ```bash
-$ 
+$ sed -i 's///' /etc/chrony.conf
+
+### check
+$ egrep "" /etc/chrony.conf
 ```
 
 ```bash
 $ systemctl restart chronyd
 
 ### check
-$ systemctl status chronyd
+$ systemctl is-active chronyd
+active
+$ systemctl is-enabled chronyd
+enabled
 ```
 
 ### 11. crond
@@ -516,7 +530,10 @@ CRONDARGS="-m off"
 $ systemctl restart crond
 
 ### check
-$ systemctl status crond
+$ systemctl is-active crond
+active
+$ systemctl is-enabled crond
+enabled
 ```
 
 #### 11-2. "crontab"を定期ジョブを追記する
@@ -538,6 +555,11 @@ $ firewall-cmd --reload
 
 ### check
 $ 
+
+$ systemctl is-active firewalld
+active
+$ systemctl is-enabled firewalld
+enabled
 ```
 
 ### 13. sshd
@@ -556,7 +578,10 @@ without-password
 $ systemctl restart sshd
 
 ### check
-$ systemctl status sshd
+$ systemctl is-active sshd
+active
+$ systemctl is-enabled sshd
+enabled
 ```
 
 ### 14. SELinux
@@ -566,7 +591,10 @@ $ systemctl status sshd
 ```bash
 $ sed -i '/^SELINUX=/s/enforcing/disabled/' /etc/selinux/config
 
-### check
+### check (after reboot)
 $ egrep "^SELINUX=" /etc/selinux/config | cut -d'=' -f2
 disabled
+
+$ getenforce 
+Disabled
 ```
