@@ -73,8 +73,18 @@ $ egrep '^CtrlAltDelBurstAction' /etc/systemd/system.conf | cut -d'=' -f2
 none
 
 ### goss
+$ goss add file /etc/systemd/system.conf
 $ goss add command "egrep '^CtrlAltDelBurstAction' /etc/systemd/system.conf | cut -d'=' -f2"
 $ cat goss.yaml
+file:
+  /etc/systemd/system.conf:
+    exists: true
+    mode: "0644"
+    size: 1705
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   egrep '^CtrlAltDelBurstAction '/etc/systemd/system.conf | cut -d'=' -f2:
     exit-status: 0
@@ -1199,6 +1209,53 @@ $ egrep "" /etc/crontab
 
 ### goss
 $ 
+```
+
+#### 12-3. ログファイルのローテーションを設定する
+
+```bash
+$ cat <<EOT >/etc/logrotate.d/sssd
+/var/log/sssd/*.log {
+    weekly
+    missingok
+    notifempty
+    sharedscripts
+    rotate 2
+    compress
+    delaycompress
+    postrotate
+        /bin/kill -HUP `cat /var/run/sssd.pid  2>/dev/null`  2> /dev/null || true
+    endscript
+}
+EOT
+
+### check
+$ ls -l /etc/logrotate.d/sssd
+-rw-r--r--. 1 root root 237  3月 17  2020 /etc/logrotate.d/sssd
+
+$ egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print $2}'
+2
+
+### goss
+$ goss add file /etc/logrotate.d/sssd
+$ goss add command "egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print \$2}'"
+$ cat goss.yaml 
+file:
+  /etc/logrotate.d/sssd:
+    exists: true
+    mode: "0644"
+    size: 237
+    owner: root
+    group: root
+    filetype: file
+    contains: []
+command:
+  egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - "2"
+    stderr: []
+    timeout: 10000
 ```
 
 ## 13. firewalld
