@@ -33,7 +33,7 @@ ja_JP.UTF-8
 
 ### goss
 $ goss add command "egrep '^LANG' /usr/bin/startx | cut -d'=' -f2"
-$ cat goss.yaml 
+$ cat goss.yaml
 command:
   egrep '^LANG' /usr/bin/startx | cut -d'=' -f2:
     exit-status: 0
@@ -112,8 +112,18 @@ $ cat /etc/dconf/db/local.d/00-disable-CAD
 logout=''
 
 ### goss
+$ goss add file /etc/dconf/db/local.d/00-disable-CAD
 $ goss add command "cat /etc/dconf/db/local.d/00-disable-CAD"
 $ cat goss.yaml
+file:
+  /etc/dconf/db/local.d/00-disable-CAD:
+    exists: true
+    mode: "0644"
+    size: 57
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   cat /etc/dconf/db/local.d/00-disable-CAD:
     exit-status: 0
@@ -133,8 +143,18 @@ $ cat /etc/dconf/db/local.d/locks/00-disable-CAD
 org/gnome/setting-deamon/plugins/media-keys/logout
 
 ### goss
+$ goss add file /etc/dconf/db/local.d/locks/00-disable-CAD
 $ goss add command "cat /etc/dconf/db/local.d/locks/00-disable-CAD"
 $ cat goss.yaml
+file:
+  /etc/dconf/db/local.d/locks/00-disable-CAD:
+    exists: true
+    mode: "0644"
+    size: 51
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   cat /etc/dconf/db/local.d/locks/00-disable-CAD:
     exit-status: 0
@@ -273,9 +293,19 @@ $ egrep '^PASS_MIN_LEN' /etc/login.defs | awk '{print $2}'
 8
 
 ### goss
+$ goss add file /etc/login.defs
 $ goss add command "egrep '^PASS_MAX_DAYS' /etc/login.defs | awk '{print \$2}'"
 $ goss add command "egrep '^PASS_MIN_LEN' /etc/login.defs | awk '{print \$2}'"
 $ cat goss.yaml
+file:
+  /etc/login.defs:
+    exists: true
+    mode: "0644"
+    size: 2027
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   egrep '^PASS_MAX_DAYS' /etc/login.defs | awk '{print $2}':
     exit-status: 0
@@ -304,9 +334,20 @@ $ egrep '^password\s+sufficient\s+pam_unix.so' /etc/pam.d/system-auth
 password    sufficient    pam_unix.so sha512 shadow try_first_pass use_authtok remember=4
 
 ### goss
+$ goss add file /etc/pam.d/system-auth
 $ goss add command "egrep '^password\s+requisite\s+pam_pwquality.so' /etc/pam.d/system-auth"
 $ goss add command "egrep '^password\s+sufficient\s+pam_unix.so' /etc/pam.d/system-auth"
 $ cat goss.yaml
+file:
+  /etc/pam.d/system-auth:
+    exists: true
+    mode: "0777"
+    size: 27
+    owner: root
+    group: root
+    linked-to: /etc/authselect/system-auth
+    filetype: symlink
+    contains: []
 command:
   egrep '^password\s+requisite\s+pam_pwquality.so' /etc/pam.d/system-auth:
     exit-status: 0
@@ -334,8 +375,18 @@ $ egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su
 auth           required        pam_wheel.so use_uid
 
 ### goss
+$ goss add file /etc/pam.d/su
 $ goss add command "egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su"
 $ cat goss.yaml
+file:
+  /etc/pam.d/su:
+    exists: true
+    mode: "0644"
+    size: 565
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su:
     exit-status: 0
@@ -353,8 +404,18 @@ $ egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su-l
 auth           required        pam_wheel.so use_uid
 
 ### goss
+$ goss add file /etc/pam.d/su-l
 $ goss add command "egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su-l"
 $ cat goss.yaml
+file:
+  /etc/pam.d/su-l:
+    exists: true
+    mode: "0644"
+    size: 189
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   egrep '^auth\s+required\s+pam_wheel.so\suse_uid' /etc/pam.d/su-l:
     exit-status: 0
@@ -772,7 +833,7 @@ $ nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print $2}' | xargs echo
 
 ### goss
 $ goss add command "nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print \$2}' | xargs echo | sed 's/;\s/\n/'"
-$ cat goss.yaml 
+$ cat goss.yaml
 command:
   nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print $2}' | xargs echo | sed 's/;\s/\n/':
     exit-status: 0
@@ -797,8 +858,18 @@ $ cat /etc/NetworkManager/conf.d/90-dns-none.conf
 dns=none
 
 ### goss
+$ goss add file /etc/NetworkManager/conf.d/90-dns-none.conf
 $ goss add command "cat /etc/NetworkManager/conf.d/90-dns-none.conf"
 $ cat goss.yaml
+file:
+  /etc/NetworkManager/conf.d/90-dns-none.conf:
+    exists: true
+    mode: "0644"
+    size: 16
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   cat /etc/NetworkManager/conf.d/90-dns-none.conf:
     exit-status: 0
@@ -951,7 +1022,7 @@ active
 
 ### goss
 $ goss add service tcpdump_app
-$ cat goss.yaml 
+$ cat goss.yaml
 service:
   tcpdump_app:
     enabled: true
@@ -970,8 +1041,18 @@ $ egrep '^LogLevel' /etc/systemd/system.conf | cut -d'=' -f2
 notice
 
 ### goss
+$ goss add file /etc/systemd/system.conf
 $ goss add command "egrep '^LogLevel' /etc/systemd/system.conf | cut -d'=' -f2"
 $ cat goss.yaml
+file:
+  /etc/systemd/system.conf:
+    exists: true
+    mode: "0644"
+    size: 1705
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   egrep '^LogLevel' /etc/systemd/system.conf | cut -d'=' -f2:
     exit-status: 0
@@ -996,10 +1077,20 @@ $ egrep 'RateLimitBurst' /etc/systemd/journald.conf | cut -d'=' -f2
 $ egrep 'SystemMaxUse' /etc/systemd/journald.conf | cut -d'=' -f2
 
 ### goss
+$ goss add file /etc/systemd/journald.conf
 $ goss add command "egrep 'RateLimitIntervalSec' /etc/systemd/journald.conf | cut -d'=' -f2"
 $ goss add command "egrep 'RateLimitBurst' /etc/systemd/journald.conf | cut -d'=' -f2"
 $ goss add command "egrep 'SystemMaxUse' /etc/systemd/journald.conf | cut -d'=' -f2"
 $ cat goss.yaml
+file:
+  /etc/systemd/journald.conf:
+    exists: true
+    mode: "0644"
+    size: 1018
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   egrep 'RateLimitBurst' /etc/systemd/journald.conf | cut -d'=' -f2:
     exit-status: 0
@@ -1074,8 +1165,18 @@ $ egrep '^OPTIONS' /etc/sysconfig/chronyd | cut -d'=' -f2
 "-4"
 
 ### goss
+$ goss add file /etc/sysconfig/chronyd
 $ goss add command "egrep '^OPTIONS' /etc/sysconfig/chronyd | cut -d'=' -f2"
 $ cat goss.yaml
+file:
+  /etc/sysconfig/chronyd:
+    exists: true
+    mode: "0644"
+    size: 48
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   egrep '^OPTIONS' /etc/sysconfig/chronyd | cut -d'=' -f2:
     exit-status: 0
@@ -1170,8 +1271,18 @@ $ egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2
 "-m off"
 
 ### goss
+$ goss add file /etc/sysconfig/crond
 $ goss add command "egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2"
-$ cat goss.yaml 
+$ cat goss.yaml
+file:
+  /etc/sysconfig/crond:
+    exists: true
+    mode: "0644"
+    size: 126
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2:
     exit-status: 0
@@ -1192,7 +1303,7 @@ active
 
 ### goss
 $ goss add service crond
-$ cat goss.yaml 
+$ cat goss.yaml
 service:
   crond:
     enabled: true
@@ -1239,7 +1350,7 @@ $ egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print $2}'
 ### goss
 $ goss add file /etc/logrotate.d/sssd
 $ goss add command "egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print \$2}'"
-$ cat goss.yaml 
+$ cat goss.yaml
 file:
   /etc/logrotate.d/sssd:
     exists: true
@@ -1295,8 +1406,18 @@ $ egrep "^PermitRootLogin" /etc/ssh/sshd_config | cut -d' ' -f2
 without-password
 
 ### goss
+$ goss add file /etc/ssh/sshd_config
 $ goss add command "egrep '^PermitRootLogin' /etc/ssh/sshd_config | cut -d' ' -f2"
-$ cat goss.yaml 
+$ cat goss.yaml
+file:
+  /etc/ssh/sshd_config:
+    exists: true
+    mode: "0600"
+    size: 4438
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   egrep '^PermitRootLogin' /etc/ssh/sshd_config | cut -d' ' -f2:
     exit-status: 0
@@ -1317,7 +1438,7 @@ active
 
 ### goss
 $ goss add service sshd
-$ cat goss.yaml 
+$ cat goss.yaml
 service:
   sshd:
     enabled: true
@@ -1339,8 +1460,18 @@ $ getenforce
 Disabled
 
 ### goss
+$ goss add file /etc/selinux/config
 $ goss add command getenforce
-$ cat goss.yaml 
+$ cat goss.yaml
+file:
+  /etc/selinux/config:
+    exists: true
+    mode: "0644"
+    size: 547
+    owner: root
+    group: root
+    filetype: file
+    contains: []
 command:
   getenforce:
     exit-status: 0
