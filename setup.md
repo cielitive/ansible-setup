@@ -466,7 +466,6 @@ $
 
 ### goss
 $ 
-$ cat goss.yaml
 ```
 
 ## 5. グループ・ユーザ
@@ -525,8 +524,22 @@ $ egrep '^ansible' /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-
 NOPASSWD: usr/bin/systemctl * sshd
 
 ### goss
-$ goss add command ""
+$ goss add command "egrep '^ansible' /etc/sudoers | awk '{print \$2}'"
+$ goss add command "egrep '^ansible' /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-"
 $ cat goss.yaml
+command:
+  egrep '^ansible' /etc/sudoers | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - ALL=(ALL)
+    stderr: []
+    timeout: 10000
+  egrep '^ansible' /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-:
+    exit-status: 0
+    stdout:
+    - 'NOPASSWD: /usr/bin/systemctl * sshd'
+    stderr: []
+    timeout: 10000
 ```
 
 #### 5-4. ".bash_profile"に環境変数を追記する
@@ -545,8 +558,22 @@ $ egrep '^export PATH=' /home/ansible/.bash_profile
 export PATH=$PATH:/usr/java/defalut/lib
 
 ### goss
-$ goss add command ""
+$ goss add command "egrep '^export LANG=' /home/ansible/.bash_profile"
+$ goss add command "egrep '^export PATH=' /home/ansible/.bash_profile"
 $ cat goss.yaml
+command:
+  egrep '^export LANG=' /home/ansible/.bash_profile:
+    exit-status: 0
+    stdout:
+    - export LANG=ja_JP
+    stderr: []
+    timeout: 10000
+  egrep '^export PATH=' /home/ansible/.bash_profile:
+    exit-status: 0
+    stdout:
+    - export PATH=$PATH:/usr/java/defalut/lib
+    stderr: []
+    timeout: 10000
 ```
 
 ## 6. ディレクトリ・ファイル
@@ -725,13 +752,13 @@ service:
 #### 8-3. スタティック・ルーティングを追加する
 
 ```bash
-$ nmcli connection modify enp0s9 +ipv4.routes '192.0.2.0/24 198.51.100.1'
-$ nmcli connection modify enp0s9 +ipv4.routes '192.0.3.0/24 198.51.100.1'
+$ nmcli connection modify enp0s9 +ipv4.routes '192.168.2.0/24 192.168.100.1'
+$ nmcli connection modify enp0s9 +ipv4.routes '192.168.3.0/24 192.168.100.1'
 
 ### check
 $ nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print $2}' | xargs echo | sed 's/;\s/\n/'
-{ ip = 192.0.2.0/24, nh = 198.51.100.1 }
-{ ip = 192.0.3.0/24, nh = 198.51.100.1 }
+{ ip = 192.168.2.0/24, nh = 192.168.100.1 }
+{ ip = 192.168.3.0/24, nh = 192.168.100.1 }
 
 ### goss
 $ goss add command "nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print \$2}' | xargs echo | sed 's/;\s/\n/'"
@@ -740,8 +767,8 @@ command:
   nmcli con show enp0s9 | grep ipv4.routes | awk -F':' '{print $2}' | xargs echo | sed 's/;\s/\n/':
     exit-status: 0
     stdout:
-    - '{ ip = 192.0.2.0/24, nh = 198.51.100.1 }'
-    - '{ ip = 192.0.3.0/24, nh = 198.51.100.1 }'
+    - '{ ip = 192.168.2.0/24, nh = 192.168.100.1 }'
+    - '{ ip = 192.168.3.0/24, nh = 192.168.100.1 }'
     stderr: []
     timeout: 10000
 ```
@@ -793,38 +820,40 @@ service:
 #### 8-5. "hosts"ファイルにレコードを追加する
 
 ```bash
-$ echo "" >>/etc/hosts
+$ cat <<EOT >>/etc/hosts
+192.168.8.100 node01 node01.example.com
+EOT
 
 ### check
-$ egrep "^" /etc/hosts
+$ egrep "node01" /etc/hosts
+192.168.8.100 node01 node01.example.com
 
 ### goss
 $ 
-$ cat goss.yaml
 ```
 
 #### 8-6. ネームサーバを追加する
 
 ```bash
 $ cat <<EOT >/etc/resolv.conf
-nameserver 192.168.2.39
-nameserver 192.168.2.38
+nameserver 192.168.8.39
+nameserver 192.168.8.38
 EOT
 
 ### check
-$ egrep '^nameserver (192.168.2.39|192.168.2.38)' /etc/resolv.conf
-nameserver 192.168.2.39
-nameserver 192.168.2.38
+$ egrep '^nameserver (192.168.8.39|192.168.8.38)' /etc/resolv.conf
+nameserver 192.168.8.39
+nameserver 192.168.8.38
 
 ### goss
-$ goss add command "egrep '^nameserver (192.168.2.39|192.168.2.38)' /etc/resolv.conf"
+$ goss add command "egrep '^nameserver (192.168.8.39|192.168.8.38)' /etc/resolv.conf"
 $ cat goss.yaml
 command:
-  egrep '^nameserver (192.168.2.39|192.168.2.38)' /etc/resolv.conf:
+  egrep '^nameserver (192.168.8.39|192.168.8.38)' /etc/resolv.conf:
     exit-status: 0
     stdout:
-    - nameserver 192.168.2.39
-    - nameserver 192.168.2.38
+    - nameserver 192.168.8.39
+    - nameserver 192.168.8.38
     stderr: []
     timeout: 10000
 ```
@@ -1049,8 +1078,8 @@ command:
 #### 11-2. 接続サーバのIPアドレスを変更する
 
 ```bash
-$ sed -i '/^pool.*$/a server 192.168.2.99 iburst' /etc/chrony.conf
-$ sed -i '/^pool.*$/a server 192.168.2.100 iburst' /etc/chrony.conf
+$ sed -i '/^pool.*$/a server 192.168.8.99 iburst' /etc/chrony.conf
+$ sed -i '/^pool.*$/a server 192.168.8.100 iburst' /etc/chrony.conf
 $ sed -i '/^pool.*$/d' /etc/chrony.conf
 $ echo "port 0" >>/etc/chrony.conf
 $ echo "leapsecmode slew" >>/etc/chrony.conf
@@ -1058,8 +1087,8 @@ $ echo "maxslewrate 1000" >>/etc/chrony.conf
 
 ### check
 $ egrep '^server' /etc/chrony.conf | awk '{print $2}'
-192.168.2.100
-192.168.2.99
+192.168.8.100
+192.168.8.99
 $ egrep '^port' /etc/chrony.conf | awk '{print $2}'
 0
 $ egrep '^leapsecmode' /etc/chrony.conf | awk '{print $2}'
@@ -1095,8 +1124,8 @@ command:
   egrep '^server' /etc/chrony.conf | awk '{print $2}':
     exit-status: 0
     stdout:
-    - 192.168.2.100
-    - 192.168.2.99
+    - 192.168.8.100
+    - 192.168.8.99
     stderr: []
     timeout: 10000
 ```
@@ -1163,9 +1192,12 @@ service:
 #### 12-2. "crontab"に定期ジョブを追記する
 
 ```bash
-$ 
+$ echo "" >>/etc/crontab
 
 ### check
+$ egrep "" /etc/crontab
+
+### goss
 $ 
 ```
 
