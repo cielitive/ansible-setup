@@ -1049,10 +1049,56 @@ command:
 #### 11-2. 接続サーバのIPアドレスを変更する
 
 ```bash
-$ sed -i 's///' /etc/chrony.conf
+$ sed -i '/^pool.*$/a server 192.168.2.99 iburst' /etc/chrony.conf
+$ sed -i '/^pool.*$/a server 192.168.2.100 iburst' /etc/chrony.conf
+$ sed -i '/^pool.*$/d' /etc/chrony.conf
+$ echo "port 0" >>/etc/chrony.conf
+$ echo "leapsecmode slew" >>/etc/chrony.conf
+$ echo "maxslewrate 1000" >>/etc/chrony.conf
 
 ### check
-$ egrep "" /etc/chrony.conf
+$ egrep '^server' /etc/chrony.conf | awk '{print $2}'
+192.168.2.100
+192.168.2.99
+$ egrep '^port' /etc/chrony.conf | awk '{print $2}'
+0
+$ egrep '^leapsecmode' /etc/chrony.conf | awk '{print $2}'
+slew
+$ egrep '^maxslewrate' /etc/chrony.conf | awk '{print $2}'
+1000
+
+### goss
+$ goss add command "egrep '^server' /etc/chrony.conf | awk '{print \$2}'"
+$ goss add command "egrep '^port' /etc/chrony.conf | awk '{print \$2}'"
+$ goss add command "egrep '^leapsecmode' /etc/chrony.conf | awk '{print \$2}'"
+$ goss add command "egrep '^maxslewrate' /etc/chrony.conf | awk '{print \$2}'"
+$ cat goss.yaml
+command:
+  egrep '^leapsecmode' /etc/chrony.conf | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - slew
+    stderr: []
+    timeout: 10000
+  egrep '^maxslewrate' /etc/chrony.conf | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - "1000"
+    stderr: []
+    timeout: 10000
+  egrep '^port' /etc/chrony.conf | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - "0"
+    stderr: []
+    timeout: 10000
+  egrep '^server' /etc/chrony.conf | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - 192.168.2.100
+    - 192.168.2.99
+    stderr: []
+    timeout: 10000
 ```
 
 ```bash
