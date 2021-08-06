@@ -1,4 +1,4 @@
-## 1. GUI(GNOME)
+## 1. GNOME(GUI)
 
 #### 1-1. デスクトップ環境の自動起動を無効化する
 
@@ -69,11 +69,11 @@ command:
 $ sed -i 's/#CtrlAltDelBurstAction=reboot-force/CtrlAltDelBurstAction=none/' /etc/systemd/system.conf
 
 ### check
-$ egrep '^CtrlAltDelBurstAction '/etc/systemd/system.conf | cut -d'=' -f2
+$ egrep '^CtrlAltDelBurstAction' /etc/systemd/system.conf | cut -d'=' -f2
 none
 
 ### goss
-$ goss add command "egrep '^CtrlAltDelBurstAction '/etc/systemd/system.conf | cut -d'=' -f2"
+$ goss add command "egrep '^CtrlAltDelBurstAction' /etc/systemd/system.conf | cut -d'=' -f2"
 $ cat goss.yaml
 command:
   egrep '^CtrlAltDelBurstAction '/etc/systemd/system.conf | cut -d'=' -f2:
@@ -354,6 +354,76 @@ command:
     timeout: 10000
 ```
 
+#### rootユーザの公開鍵作成及び、配布する
+
+```bash
+$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa): 
+Created directory '/root/.ssh'.
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+SHA256:IfoTXRoaXhAreEJJbqgA+doqcXY2xlenivqz8sVx8i4 root@localhost.localdomain
+The key\'s randomart image is:
++---[RSA 3072]----+
+|.oo.  o.         |
+|o+..   o         |
+|o.= o + + .      |
+|o..o + *.=.      |
+|.o .. *.So       |
+|o + *o.*.        |
+| = + +=..        |
+|o . o.Eo         |
+|. .=+o ..        |
++----[SHA256]-----+
+
+### check
+$ md5sum ~/.ssh/id_rsa
+852fa487eb3ace8ae4b371bb0f6bf0d6  /root/.ssh/id_rsa
+
+$ md5sum ~/.ssh/id_rsa.pub 
+93d3b9b1c62363c960fdab17ea42e8d5  /root/.ssh/id_rsa.pub
+
+### goss
+$ goss add command "md5sum ~/.ssh/id_rsa | cut -d' ' -f1"
+$ goss add command "md5sum ~/.ssh/id_rsa.pub | cut -d' ' -f1"
+$ cat goss.yaml
+command:
+  md5sum ~/.ssh/id_rsa | cut -d' ' -f1:
+    exit-status: 0
+    stdout:
+    - 852fa487eb3ace8ae4b371bb0f6bf0d6
+    stderr: []
+    timeout: 10000
+  md5sum ~/.ssh/id_rsa.pub | cut -d' ' -f1:
+    exit-status: 0
+    stdout:
+    - 93d3b9b1c62363c960fdab17ea42e8d5
+    stderr: []
+    timeout: 10000
+```
+
+```bash
+$ ssh-copy-id 192.168.8.100
+/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
+/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+root@192.168.8.100\'s password:
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh '192.168.8.100'"
+and check to make sure that only the key(s) you wanted were added.
+
+### check
+
+### goss
+
+```
+
 ## 4. ディスク
 
 #### 4-1. ディスクタイムアウト値を変更する
@@ -455,7 +525,7 @@ $ egrep '^ansible' /etc/sudoers | sed -e 's/\s\+/ /g' | cut -d' ' -f3-
 NOPASSWD: usr/bin/systemctl * sshd
 
 ### goss
-$ 
+$ goss add command ""
 $ cat goss.yaml
 ```
 
@@ -475,7 +545,7 @@ $ egrep '^export PATH=' /home/ansible/.bash_profile
 export PATH=$PATH:/usr/java/defalut/lib
 
 ### goss
-$ 
+$ goss add command ""
 $ cat goss.yaml
 ```
 
@@ -770,13 +840,13 @@ $ egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo
 files dns
 
 ### goss
-$ goss add command "egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo"
+$ goss add command "egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print \$2}' | xargs echo"
 $ cat goss.yaml
 command:
-  egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print }' | xargs echo:
+  egrep '^hosts' /etc/nsswitch.conf | awk -F':' '{print $2}' | xargs echo:
     exit-status: 0
     stdout:
-    - 'hosts: files dns'
+    - files dns
     stderr: []
     timeout: 10000
 ```
@@ -859,6 +929,17 @@ $ sed -i 's/^#LogLevel=info/LogLevel=notice/' /etc/systemd/system.conf
 ### check
 $ egrep '^LogLevel' /etc/systemd/system.conf | cut -d'=' -f2
 notice
+
+### goss
+$ goss add command "egrep '^LogLevel' /etc/systemd/system.conf | cut -d'=' -f2"
+$ cat goss.yaml
+command:
+  egrep '^LogLevel' /etc/systemd/system.conf | cut -d'=' -f2:
+    exit-status: 0
+    stdout:
+    - notice
+    stderr: []
+    timeout: 10000
 ```
 
 #### 10-2. メッセージ出力レートの制限を変更する
@@ -875,6 +956,29 @@ $ egrep 'RateLimitBurst' /etc/systemd/journald.conf | cut -d'=' -f2
 0
 $ egrep 'SystemMaxUse' /etc/systemd/journald.conf | cut -d'=' -f2
 
+### goss
+$ goss add command "egrep 'RateLimitIntervalSec' /etc/systemd/journald.conf | cut -d'=' -f2"
+$ goss add command "egrep 'RateLimitBurst' /etc/systemd/journald.conf | cut -d'=' -f2"
+$ goss add command "egrep 'SystemMaxUse' /etc/systemd/journald.conf | cut -d'=' -f2"
+$ cat goss.yaml
+command:
+  egrep 'RateLimitBurst' /etc/systemd/journald.conf | cut -d'=' -f2:
+    exit-status: 0
+    stdout:
+    - "0"
+    stderr: []
+    timeout: 10000
+  egrep 'RateLimitIntervalSec' /etc/systemd/journald.conf | cut -d'=' -f2:
+    exit-status: 0
+    stdout:
+    - "0"
+    stderr: []
+    timeout: 10000
+  egrep 'SystemMaxUse' /etc/systemd/journald.conf | cut -d'=' -f2:
+    exit-status: 0
+    stdout: []
+    stderr: []
+    timeout: 10000
 ```
 
 #### 10-3. ジャーナルログを永続化する
@@ -886,6 +990,19 @@ $ chown root:systemd-journal /var/log/journal
 ### check
 $ ls -d /var/log/journal
 /var/log/journal
+
+### goss
+$ goss add file /var/log/journal
+$ cat goss.yaml
+file:
+  /var/log/journal:
+    exists: true
+    mode: "0755"
+    size: 46
+    owner: root
+    group: root
+    filetype: directory
+    contains: []
 ```
 
 ```bash
@@ -896,6 +1013,14 @@ $ systemctl is-enabled systemd-journald
 static
 $ systemctl is-active systemd-journald
 active
+
+### goss
+$ goss add service systemd-journald
+$ cat goss.yaml
+service:
+  systemd-journald:
+    enabled: true
+    running: true
 ```
 
 ## 11. chronyd
@@ -908,6 +1033,17 @@ $ sed -i 's/OPTIONS=""/OPTIONS="-4"/' /etc/sysconfig/chronyd
 ### check
 $ egrep '^OPTIONS' /etc/sysconfig/chronyd | cut -d'=' -f2
 "-4"
+
+### goss
+$ goss add command "egrep '^OPTIONS' /etc/sysconfig/chronyd | cut -d'=' -f2"
+$ cat goss.yaml
+command:
+  egrep '^OPTIONS' /etc/sysconfig/chronyd | cut -d'=' -f2:
+    exit-status: 0
+    stdout:
+    - '"-4"'
+    stderr: []
+    timeout: 10000
 ```
 
 #### 11-2. 接続サーバのIPアドレスを変更する
@@ -927,6 +1063,14 @@ $ systemctl is-enabled chronyd
 enabled
 $ systemctl is-active chronyd
 active
+
+### goss
+$ goss add service chronyd
+$ cat goss.yaml
+service:
+  chronyd:
+    enabled: true
+    running: true
 ```
 
 ## 12. crond
@@ -960,6 +1104,14 @@ $ systemctl is-enabled crond
 enabled
 $ systemctl is-active crond
 active
+
+### goss
+$ goss add service crond
+$ cat goss.yaml 
+service:
+  crond:
+    enabled: true
+    running: true
 ```
 
 #### 12-2. "crontab"を定期ジョブを追記する
@@ -980,12 +1132,20 @@ $ cp -p ./public.xml /etc/firewalld/zone/public.xml
 $ firewall-cmd --reload
 
 ### check
-$ 
+$ firewall-cmd --list-all
 
 $ systemctl is-enabled firewalld
 enabled
 $ systemctl is-active firewalld
 active
+
+### goss
+$ goss add service firewalld
+$ cat goss.yaml
+service:
+  firewalld:
+    enabled: true
+    running: true
 ```
 
 ## 14. sshd
