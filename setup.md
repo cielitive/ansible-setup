@@ -1160,7 +1160,7 @@ service:
     running: true
 ```
 
-#### 12-2. "crontab"を定期ジョブを追記する
+#### 12-2. "crontab"に定期ジョブを追記する
 
 ```bash
 $ 
