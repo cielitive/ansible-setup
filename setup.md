@@ -1375,11 +1375,15 @@ service:
 #### 13-1. "public zone"にルールを追加する
 
 ```bash
-$ cp -p ./public.xml /etc/firewalld/zone/public.xml
+# $ cp -p ./public.xml /etc/firewalld/zone/public.xml
+$ firewall-cmd --add-port=8080/tcp --permanent
+$ firewall-cmd --add-port=60000/udp --permanent
 $ firewall-cmd --reload
 
 ### check
-$ firewall-cmd --list-all
+# $ firewall-cmd --list-all
+$ firewall-cmd --list-ports --zone=public
+8080/tcp 60000/udp
 
 $ systemctl is-enabled firewalld
 enabled
