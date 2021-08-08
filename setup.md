@@ -1153,9 +1153,119 @@ service:
     running: true
 ```
 
-## 11. chronyd
+## 11. crond
 
-#### 11-1. IPv4アドレスのみ解決するようにする
+#### 11-1. メール送信を無効化する
+
+```bash
+$ sed -i 's/CRONDARGS=/CRONDARGS="-m off"/' /etc/sysconfig/crond
+
+### check
+$ egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2
+"-m off"
+
+### goss
+$ goss add file /etc/sysconfig/crond
+$ goss add command "egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2"
+$ cat goss.yaml
+file:
+  /etc/sysconfig/crond:
+    exists: true
+    mode: "0644"
+    size: 126
+    owner: root
+    group: root
+    filetype: file
+    contains: []
+command:
+  egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2:
+    exit-status: 0
+    stdout:
+    - '"-m off"'
+    stderr: []
+    timeout: 10000
+```
+
+```bash
+$ systemctl restart crond
+
+### check
+$ systemctl is-enabled crond
+enabled
+$ systemctl is-active crond
+active
+
+### goss
+$ goss add service crond
+$ cat goss.yaml
+service:
+  crond:
+    enabled: true
+    running: true
+```
+
+#### 11-2. "crontab"に定期ジョブを追記する
+
+```bash
+$ echo "" >>/etc/crontab
+
+### check
+$ egrep "" /etc/crontab
+
+### goss
+$ 
+```
+
+#### 11-3. ログファイルのローテーションを設定する
+
+```bash
+$ cat <<EOT >/etc/logrotate.d/sssd
+/var/log/sssd/*.log {
+    weekly
+    missingok
+    notifempty
+    sharedscripts
+    rotate 2
+    compress
+    delaycompress
+    postrotate
+        /bin/kill -HUP `cat /var/run/sssd.pid  2>/dev/null`  2> /dev/null || true
+    endscript
+}
+EOT
+
+### check
+$ ls -l /etc/logrotate.d/sssd
+-rw-r--r--. 1 root root 237  3月 17  2020 /etc/logrotate.d/sssd
+
+$ egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print $2}'
+2
+
+### goss
+$ goss add file /etc/logrotate.d/sssd
+$ goss add command "egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print \$2}'"
+$ cat goss.yaml
+file:
+  /etc/logrotate.d/sssd:
+    exists: true
+    mode: "0644"
+    size: 237
+    owner: root
+    group: root
+    filetype: file
+    contains: []
+command:
+  egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print $2}':
+    exit-status: 0
+    stdout:
+    - "2"
+    stderr: []
+    timeout: 10000
+```
+
+## 12. chronyd
+
+#### 12-1. IPv4アドレスのみ解決するようにする
 
 ```bash
 $ sed -i 's/OPTIONS=""/OPTIONS="-4"/' /etc/sysconfig/chronyd
@@ -1186,7 +1296,7 @@ command:
     timeout: 10000
 ```
 
-#### 11-2. 接続サーバのIPアドレスを変更する
+#### 12-2. 接続サーバのIPアドレスを変更する
 
 ```bash
 $ sed -i '/^pool.*$/a server 192.168.8.99 iburst' /etc/chrony.conf
@@ -1259,115 +1369,6 @@ service:
     running: true
 ```
 
-## 12. crond
-
-#### 12-1. メール送信を無効化する
-
-```bash
-$ sed -i 's/CRONDARGS=/CRONDARGS="-m off"/' /etc/sysconfig/crond
-
-### check
-$ egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2
-"-m off"
-
-### goss
-$ goss add file /etc/sysconfig/crond
-$ goss add command "egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2"
-$ cat goss.yaml
-file:
-  /etc/sysconfig/crond:
-    exists: true
-    mode: "0644"
-    size: 126
-    owner: root
-    group: root
-    filetype: file
-    contains: []
-command:
-  egrep '^CRONDARGS' /etc/sysconfig/crond | cut -d'=' -f2:
-    exit-status: 0
-    stdout:
-    - '"-m off"'
-    stderr: []
-    timeout: 10000
-```
-
-```bash
-$ systemctl restart crond
-
-### check
-$ systemctl is-enabled crond
-enabled
-$ systemctl is-active crond
-active
-
-### goss
-$ goss add service crond
-$ cat goss.yaml
-service:
-  crond:
-    enabled: true
-    running: true
-```
-
-#### 12-2. "crontab"に定期ジョブを追記する
-
-```bash
-$ echo "" >>/etc/crontab
-
-### check
-$ egrep "" /etc/crontab
-
-### goss
-$ 
-```
-
-#### 12-3. ログファイルのローテーションを設定する
-
-```bash
-$ cat <<EOT >/etc/logrotate.d/sssd
-/var/log/sssd/*.log {
-    weekly
-    missingok
-    notifempty
-    sharedscripts
-    rotate 2
-    compress
-    delaycompress
-    postrotate
-        /bin/kill -HUP `cat /var/run/sssd.pid  2>/dev/null`  2> /dev/null || true
-    endscript
-}
-EOT
-
-### check
-$ ls -l /etc/logrotate.d/sssd
--rw-r--r--. 1 root root 237  3月 17  2020 /etc/logrotate.d/sssd
-
-$ egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print $2}'
-2
-
-### goss
-$ goss add file /etc/logrotate.d/sssd
-$ goss add command "egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print \$2}'"
-$ cat goss.yaml
-file:
-  /etc/logrotate.d/sssd:
-    exists: true
-    mode: "0644"
-    size: 237
-    owner: root
-    group: root
-    filetype: file
-    contains: []
-command:
-  egrep ' rotate' /etc/logrotate.d/sssd | xargs echo | awk '{print $2}':
-    exit-status: 0
-    stdout:
-    - "2"
-    stderr: []
-    timeout: 10000
-```
 
 ## 13. firewalld
 
