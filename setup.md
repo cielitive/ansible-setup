@@ -30,7 +30,7 @@ host_files_dir="{{ playbook_dir }}/files/{{ env }}/host_files/{{ inventory_hostn
 host_test_dir="{{ playbook_dir }}/test/{{ env }}/{{ inventory_hostname }}"
 ```
 
-#### 1-3. 構築対象の変数定義ファイルを作成する (※グループとホストで重複しないように定義する)
+#### 1-3. 構築対象の変数定義ファイルを作成する
 
 ```bash
 ### グループ及び、ホストの変数テンプレートからコピー
@@ -40,7 +40,7 @@ $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
 
 #### 定義必須の変数
 
-###### グループ用変数
+#### グループ用変数
 
 ```yaml
 ### 第一階層に"group"を定義
@@ -49,7 +49,7 @@ group:
   name: <GROUP>          
 ```
 
-###### ホスト用変数
+#### ホスト用変数
 
 ```yaml
 ### 第一階層に"host"を定義
@@ -59,6 +59,8 @@ host:
 ```
 
 #### その他の変数
+
+- グループ用変数とホスト用変数で値が重複しないよう注意して定義する
 
 ```yaml
 ### グループに定義できる変数
@@ -142,10 +144,9 @@ group:
     - { path: /var/group01, owner: root, group: root, permit: '0755' }
 ```
 
-#### 
+#### カーネル・パラメータ変更用の変数
 
 ```yaml
-### 
 group:
   sysctl:
     - { key: vm.swappiness, value: 40 }
