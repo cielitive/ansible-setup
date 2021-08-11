@@ -34,6 +34,8 @@ group:
     - { name: grp02g, gid: 2002 }
   users:
     - { name: usr01g, uid: 2001, group: grp01g, groups: grp00g, shell: /bin/bash, home: /home/usr01g, password: usr01g }
+        bash_profile: "\nexport LANG=ja_JP\n",
+        sudoers: 'ALL=(ALL:ALL) NOPASSWD: ALL' }
     - { name: usr02g, uid: 2002, group: grp02g, groups: '', shell: /bin/bash, home: /home/usr02g, password: usr02g }
   dirs:
     - { path: /var/group01, owner: root, group: root, permit: '0755' }
@@ -42,15 +44,10 @@ group:
   pam_limit:
     - { domain: apache, type: soft, item: nofile, value: '10000' }
     - { domain: apache, type: hard, item: nofile, value: '10000' }
-    - { domain: apache, type: soft, item: nproc, value: '10000' }
-    - { domain: apache, type: hard, item: nproc, value: '10000' }
   static_route:
     - { nic: enp0s9, cidr: '192.168.2.0/24', gateway: 192.168.100.1 }
-    - { nic: enp0s9, cidr: '192.168.5.0/24', gateway: 192.168.100.1 }
   firewall_rules:
     - { port: 9000, protocol: tcp, state: enabled }
-    - { port: 9001, protocol: tcp, state: enabled }
-    - { port: 9002, protocol: tcp, state: enabled }
     - { port: 9001, protocol: tcp, state: disabled }
 ```
 
@@ -65,12 +62,12 @@ group:
 
 #### RPMパッケージのインストールに使用する変数
 
+- インストールするパッケージは、"package"roleのfilesディレクトリに配置
+
 ```yaml
 group:
   rpm:
     - sshpass-1.06-9.el8.x86_64.rpm
-
-### インストールするパッケージは、"package"roleのfilesディレクトリに配置
 ```
 
 #### 論理ボリュームの作成及び、論理ボリュームのマウントに使用する変数
@@ -79,8 +76,6 @@ group:
 group:
   lvm:
     - { device: sdb, part_num: 1, vg_name: vg01, pe_size: 32, lv_name: lv01, fs_type: xfs, mount_point: /app }
-
-### 
 ```
 
 #### グループ作成に使用する変数
@@ -89,8 +84,6 @@ group:
 group:
   groups:
     - { name: grp00g, gid: 2100 }
-
-### 
 ```
 
 #### ユーザ作成に使用する変数
@@ -104,15 +97,15 @@ group:
 ```yaml
 group:
   users:
-    - { name: usr01d, uid: 1001, group: grp01d, groups: grp00d, shell: /bin/bash, home: /home/usr01d, password: usr01d,
-        bash_profile: "\nexport LANG=ja_JP\nexport PATH=$PATH:/usr/java/defalut/lib\n",
-        sudoers: 'ALL=(ALL)       NOPASSWD: /usr/bin/systemctl * sshd' }
+    - { name: usr01g, uid: 2001, group: grp01g, groups: grp00g, shell: /bin/bash, home: /home/usr01g, password: usr01g }
+        bash_profile: "\nexport LANG=ja_JP\n",
+        sudoers: 'ALL=(ALL:ALL) NOPASSWD: ALL' }
+    - { name: usr02g, uid: 2002, group: grp02g, groups: '', shell: /bin/bash, home: /home/usr02g, password: usr02g }
 ```
 
-#### 
+#### ディレクトリ作成に使用する変数
 
 ```yaml
-### 
 group:
   dirs:
     - { path: /var/group01, owner: root, group: root, permit: '0755' }
