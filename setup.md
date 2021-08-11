@@ -38,10 +38,32 @@ $ cp -rp ./production/group_vars/_template ./production/group_vars/<GROUP>
 $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
 ```
 
+#### 定義必須の変数
+
+#### グループ用変数
+
+```yaml
+### 第一階層に"group"を定義
+group:
+  ### グループ名を定義　　　　　　　　　　　
+  name: <GROUP>          
+```
+
+#### ホスト用変数
+
+```yaml
+### 第一階層に"host"を定義
+host:
+  ### ホスト名を定義　　　　　　　　　　　
+  name: <HOST>          
+```
+
+#### その他の変数
+
 ```yaml
 ### グループに定義できる変数
-group:
-  name: targets
+(group|host):
+  name: (<GROUP>|<HOST>)
   rpm:
     - sshpass-1.06-9.el8.x86_64.rpm
   lvm:
@@ -67,15 +89,6 @@ group:
   firewall_rules:
     - { port: 9000, protocol: tcp, state: enabled }
     - { port: 9001, protocol: tcp, state: disabled }
-```
-
-#### グループ変数を使用するために必須な変数
-
-```yaml
-### 第一階層に"group"を定義
-group:
-  ### グループ名を定義　　　　　　　　　　　
-  name: targets          
 ```
 
 #### RPMパッケージのインストールに使用する変数
