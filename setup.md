@@ -72,7 +72,7 @@ group:
     - sshpass-1.06-9.el8.x86_64.rpm
 ```
 
-###### RPMパッケージのインストールに使用する変数
+###### 論理ボリュームの作成及び、論理ボリュームのマウントに使用する変数
 
 ```yaml
 ### 
@@ -81,7 +81,7 @@ group:
     - { device: sdb, part_num: 1, vg_name: vg01, pe_size: 32, lv_name: lv01, fs_type: xfs, mount_point: /app }
 ```
 
-###### 
+###### グループ作成に使用する変数
 
 ```yaml
 ### 
