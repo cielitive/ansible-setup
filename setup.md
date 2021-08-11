@@ -47,7 +47,7 @@ $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
 
 ```yaml
 ### 第一階層に"group"を定義
-group:
+(group|host):
   ### グループ名を定義　　　　　　　　　　　
   name: <GROUP>          
 ```
@@ -56,7 +56,7 @@ group:
 
 ```yaml
 ### 第一階層に"host"を定義
-host:
+(group|host):
   ### ホスト名を定義　　　　　　　　　　　
   name: <HOST>          
 ```
@@ -66,7 +66,7 @@ host:
 - インストールするパッケージは、"package"roleのfilesディレクトリに配置
 
 ```yaml
-group:
+(group|host):
   rpm:
     - sshpass-1.06-9.el8.x86_64.rpm
 ```
@@ -74,7 +74,7 @@ group:
 #### 論理ボリュームの作成及び、論理ボリュームのマウント用
 
 ```yaml
-group:
+(group|host):
   lvm:
     - { device: sdb, part_num: 1, vg_name: vg01, pe_size: 32, lv_name: lv01, fs_type: xfs, mount_point: /app }
 ```
@@ -82,7 +82,7 @@ group:
 #### グループ作成用
 
 ```yaml
-group:
+(group|host):
   groups:
     - { name: grp00g, gid: 2100 }
 ```
@@ -96,7 +96,7 @@ group:
 - sudoers: 「/etc/sudoers」ファイルに追加する内容を記載するオプションです。不要な場合は定義不要です。
 
 ```yaml
-group:
+(group|host):
   users:
     - { name: usr01g, uid: 2001, group: grp01g, groups: grp00g, shell: /bin/bash, home: /home/usr01g, password: usr01g }
         bash_profile: "\nexport LANG=ja_JP\n",
@@ -107,7 +107,7 @@ group:
 #### ディレクトリ作成用
 
 ```yaml
-group:
+(group|host):
   dirs:
     - { path: /var/group01, owner: root, group: root, permit: '0755' }
 ```
@@ -115,7 +115,7 @@ group:
 #### カーネル・パラメータ変更用
 
 ```yaml
-group:
+(group|host):
   sysctl:
     - { key: vm.swappiness, value: 40 }
 ```
@@ -123,8 +123,7 @@ group:
 #### リソースリミット変更用
 
 ```yaml
-### 
-group:
+(group|host):
   pam_limit:
     - { domain: apache, type: soft, item: nofile, value: '10000' }
     - { domain: apache, type: hard, item: nofile, value: '10000' }
@@ -133,8 +132,7 @@ group:
 #### スタティック・ルーティング追加用
 
 ```yaml
-### 
-group:
+(group|host):
   static_route:
     - { nic: enp0s9, cidr: '192.168.2.0/24', gateway: 192.168.100.1 }
 ```
@@ -142,14 +140,12 @@ group:
 #### ファイアウォール・ルール追加用
 
 ```yaml
-### 
-group:
+(group|host):
   firewall_rules:
     - { port: 9000, protocol: tcp, state: enabled }
 ```
 
 ```yaml
-### グループに定義できる変数
 (group|host):
   name: (<GROUP>|<HOST>)
   rpm:
