@@ -6,13 +6,31 @@
 $ git clone <URL>
 ```
 
-#### 1-2. インベントリファイルを修正する
+#### 1-2. インベントリファイルを作成する
 
 ```bash
-
+$ vim ./production/inventory/hosts
 ```
 
-#### 1-3. 構築対象の変数定義ファイルを準備する (※グループとホストで重複しないように定義する)
+##### 以下の形式で作成する
+
+```bash
+[<GROUP01>]
+<HOST01> ansible_host=<IP>
+<HOST02> ansible_host=<IP>
+
+[<GROUP02>]
+<HOST03> ansible_host=<IP>
+<HOST04> ansible_host=<IP>
+
+[all:vars]
+env=production
+group_files_dir="{{ playbook_dir }}/files/{{ env }}/group_files/{{ group.name }}"
+host_files_dir="{{ playbook_dir }}/files/{{ env }}/host_files/{{ inventory_hostname }}"
+host_test_dir="{{ playbook_dir }}/test/{{ env }}/{{ inventory_hostname }}"
+```
+
+#### 1-3. 構築対象の変数定義ファイルを作成する (※グループとホストで重複しないように定義する)
 
 ```bash
 ### グループ及び、ホストの変数テンプレートからコピー
