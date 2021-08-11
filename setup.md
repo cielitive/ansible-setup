@@ -54,3 +54,11 @@ group:
     - { port: 9002, protocol: tcp, state: enabled }
     - { port: 9001, protocol: tcp, state: disabled }
 ```
+
+```yaml
+### 必須項目
+### 第一階層に"group"を定義する
+group:
+  ### グループ名を定義する　　　　　　　　　　　　
+  name: targets          
+```
