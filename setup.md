@@ -54,7 +54,7 @@ group:
     - { port: 9001, protocol: tcp, state: disabled }
 ```
 
-###### グループ変数を使用するために必須な変数
+#### グループ変数を使用するために必須な変数
 
 ```yaml
 ### 第一階層に"group"を定義
@@ -63,7 +63,7 @@ group:
   name: targets          
 ```
 
-###### RPMパッケージのインストールに使用する変数
+#### RPMパッケージのインストールに使用する変数
 
 ```yaml
 group:
@@ -73,7 +73,7 @@ group:
 ### インストールするパッケージは、"package"roleのfilesディレクトリに配置
 ```
 
-###### 論理ボリュームの作成及び、論理ボリュームのマウントに使用する変数
+#### 論理ボリュームの作成及び、論理ボリュームのマウントに使用する変数
 
 ```yaml
 group:
@@ -83,7 +83,7 @@ group:
 ### 
 ```
 
-###### グループ作成に使用する変数
+#### グループ作成に使用する変数
 
 ```yaml
 group:
@@ -96,8 +96,8 @@ group:
 #### ユーザ作成に使用する変数
 
 - groups: オプションです。不要な場合は「''(シングルクォート)」とする
-- bash_profile: .bash_profileに追加する内容を記載するオプションです。不要な場合は定義不要です。
-- sudoers: sudoersファイルに追加する内容を記載するオプションです。不要な場合は定義不要です。
+- bash_profile: 「$HOME/.bash_profile」に追加する内容を記載するオプションです。不要な場合は定義不要です。
+- sudoers: 「/etc/sudoers」ファイルに追加する内容を記載するオプションです。不要な場合は定義不要です。
 
 ```yaml
 group:
@@ -107,7 +107,7 @@ group:
         sudoers: 'ALL=(ALL)       NOPASSWD: /usr/bin/systemctl * sshd' }
 ```
 
-###### 
+#### 
 
 ```yaml
 ### 
@@ -116,7 +116,7 @@ group:
     - { path: /var/group01, owner: root, group: root, permit: '0755' }
 ```
 
-###### 
+#### 
 
 ```yaml
 ### 
@@ -125,7 +125,7 @@ group:
     - { key: vm.swappiness, value: 40 }
 ```
 
-###### 
+#### 
 
 ```yaml
 ### 
@@ -135,7 +135,7 @@ group:
     - { domain: apache, type: hard, item: nofile, value: '10000' }
 ```
 
-###### 
+#### 
 
 ```yaml
 ### 
@@ -144,7 +144,7 @@ group:
     - { nic: enp0s9, cidr: '192.168.2.0/24', gateway: 192.168.100.1 }
 ```
 
-###### 
+#### 
 
 ```yaml
 ### 
