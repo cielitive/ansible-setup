@@ -66,8 +66,81 @@ group:
 ###### RPMパッケージのインストールに使用する変数
 
 ```yaml
-### インストールするパッケージは、"package role"のfilesディレクトリに配置
+### インストールするパッケージは、"package"roleのfilesディレクトリに配置
 group:
   rpm:
     - sshpass-1.06-9.el8.x86_64.rpm
+```
+
+###### RPMパッケージのインストールに使用する変数
+
+```yaml
+### 
+group:
+  lvm:
+    - { device: sdb, part_num: 1, vg_name: vg01, pe_size: 32, lv_name: lv01, fs_type: xfs, mount_point: /app }
+```
+
+###### 
+
+```yaml
+### 
+group:
+  groups:
+    - { name: grp00g, gid: 2100 }
+```
+
+###### 
+
+```yaml
+### 
+group:
+  users:
+    - { name: usr01g, uid: 2001, group: grp01g, groups: grp00g, shell: /bin/bash, home: /home/usr01g, password: usr01g }
+```
+
+###### 
+
+```yaml
+### 
+group:
+  dirs:
+    - { path: /var/group01, owner: root, group: root, permit: '0755' }
+```
+
+###### 
+
+```yaml
+### 
+group:
+  sysctl:
+    - { key: vm.swappiness, value: 40 }
+```
+
+###### 
+
+```yaml
+### 
+group:
+  pam_limit:
+    - { domain: apache, type: soft, item: nofile, value: '10000' }
+    - { domain: apache, type: hard, item: nofile, value: '10000' }
+```
+
+###### 
+
+```yaml
+### 
+group:
+  static_route:
+    - { nic: enp0s9, cidr: '192.168.2.0/24', gateway: 192.168.100.1 }
+```
+
+###### 
+
+```yaml
+### 
+group:
+  firewall_rules:
+    - { port: 9000, protocol: tcp, state: enabled }
 ```
