@@ -12,7 +12,7 @@ $ git clone <URL>
 
 ```
 
-#### 1-3. 構築対象の変数定義ファイルを準備する (※グループとホストで重複定義する)
+#### 1-3. 構築対象の変数定義ファイルを準備する (※グループとホストで重複しないように定義する)
 
 ```bash
 ### グループ及び、ホストの変数テンプレートからコピー
@@ -20,9 +20,8 @@ $ cp -rp ./production/group_vars/_template ./production/group_vars/<GROUP>
 $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
 ```
 
-##### グループに定義できる変数は、以下となります
-
 ```yaml
+### グループに定義できる変数
 group:
   name: targets
   rpm:
@@ -55,10 +54,19 @@ group:
     - { port: 9001, protocol: tcp, state: disabled }
 ```
 
+###### 必須項目
+
 ```yaml
-### 必須項目
 ### 第一階層に"group"を定義する
 group:
   ### グループ名を定義する　　　　　　　　　　　　
   name: targets          
+```
+
+###### RPMパッケージのインストールに使用します
+
+```yaml
+group:
+  rpm:
+    - sshpass-1.06-9.el8.x86_64.rpm
 ```
