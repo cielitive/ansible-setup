@@ -71,4 +71,3 @@ group:
   rpm:
     - sshpass-1.06-9.el8.x86_64.rpm
 ```
-
