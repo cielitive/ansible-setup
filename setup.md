@@ -47,7 +47,7 @@ $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
 
 ```yaml
 ### 第一階層に"group"を定義
-(group|host):
+group:
   ### グループ名を定義　　　　　　　　　　　
   name: <GROUP>          
 ```
@@ -56,7 +56,7 @@ $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
 
 ```yaml
 ### 第一階層に"host"を定義
-(group|host):
+host:
   ### ホスト名を定義　　　　　　　　　　　
   name: <HOST>          
 ```
@@ -112,37 +112,34 @@ $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
     - { path: /var/group01, owner: root, group: root, permit: '0755' }
 ```
 
-#### カーネル・パラメータ変更用
-
 ```yaml
+### カーネル・パラメータ変更用
 (group|host):
   sysctl:
     - { key: vm.swappiness, value: 40 }
 ```
 
-#### リソースリミット変更用
-
 ```yaml
+### リソースリミット変更用
 (group|host):
   pam_limit:
     - { domain: apache, type: soft, item: nofile, value: '10000' }
     - { domain: apache, type: hard, item: nofile, value: '10000' }
 ```
 
-#### スタティック・ルーティング追加用
-
 ```yaml
+### スタティック・ルーティング追加用
 (group|host):
   static_route:
     - { nic: enp0s9, cidr: '192.168.2.0/24', gateway: 192.168.100.1 }
 ```
 
-#### ファイアウォール・ルール追加用
-
 ```yaml
+### ファイアウォール・ルール追加用
 (group|host):
   firewall_rules:
     - { port: 9000, protocol: tcp, state: enabled }
+    - { port: 9001, protocol: tcp, state: disabled }
 ```
 
 ```yaml
