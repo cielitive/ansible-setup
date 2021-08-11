@@ -10,9 +10,9 @@ $ git clone <URL>
 
 ```bash
 $ vim ./production/inventory/hosts
-```
 
-##### 以下の形式で作成する
+### 以下の形式で作成する
+```
 
 ```bash
 [<GROUP01>]
@@ -30,7 +30,7 @@ host_files_dir="{{ playbook_dir }}/files/{{ env }}/host_files/{{ inventory_hostn
 host_test_dir="{{ playbook_dir }}/test/{{ env }}/{{ inventory_hostname }}"
 ```
 
-#### 1-3. 構築対象の変数定義ファイルを作成する
+#### 1-3. 変数ファイルを作成する
 
 ```bash
 ### グループ及び、ホストの変数テンプレートからコピー
@@ -40,7 +40,7 @@ $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
 
 #### 定義必須の変数
 
-#### グループ用変数
+###### グループ用変数
 
 ```yaml
 ### 第一階層に"group"を定義
@@ -49,7 +49,7 @@ group:
   name: <GROUP>          
 ```
 
-#### ホスト用変数
+###### ホスト用変数
 
 ```yaml
 ### 第一階層に"host"を定義
