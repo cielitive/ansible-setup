@@ -1,14 +1,15 @@
 ## 1. 事前準備
 
-#### 1-1. 下記コマンドを実行し、playbookを取得する
+#### 1-1. 構築用リポジトリをクローンする
 
 ```bash
-$ git clone <URL>
+$ git clone <_url_>
 ```
 
 #### 1-2. インベントリファイルを作成する
 
 ```bash
+$ cd <_repository_>
 $ vim ./production/inventory/hosts
 
 ### 以下の形式で作成する
