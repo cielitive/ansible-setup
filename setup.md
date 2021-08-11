@@ -4,7 +4,7 @@
 
 > 変数定義における注意事項は以下となります
 >  
-> - グループ(group_vars/<GROUP>)とホスト(host_vars/<HOST>)に定義する内容は、重複しないようにする
+> 1. グループ(group_vars/<GROUP>)とホスト(host_vars/<HOST>)に定義する内容は、重複しないようにする
 
 ```bash
 $ systemctl disable display-manager
