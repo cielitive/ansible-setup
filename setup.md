@@ -40,7 +40,7 @@ $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
 
 #### 定義必須の変数
 
-#### グループ用変数
+###### グループ用変数
 
 ```yaml
 ### 第一階層に"group"を定義
@@ -49,7 +49,7 @@ group:
   name: <GROUP>          
 ```
 
-#### ホスト用変数
+###### ホスト用変数
 
 ```yaml
 ### 第一階層に"host"を定義
