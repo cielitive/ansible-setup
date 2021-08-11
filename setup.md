@@ -54,19 +54,21 @@ group:
     - { port: 9001, protocol: tcp, state: disabled }
 ```
 
-###### 必須項目
+###### グループ変数を使用するために必須な変数
 
 ```yaml
-### 第一階層に"group"を定義する
+### 第一階層に"group"を定義
 group:
-  ### グループ名を定義する　　　　　　　　　　　　
+  ### グループ名を定義　　　　　　　　　　　
   name: targets          
 ```
 
-###### RPMパッケージのインストールに使用します
+###### RPMパッケージのインストールに使用する変数
 
 ```yaml
+### インストールするパッケージは、"package role"のfilesディレクトリに配置
 group:
   rpm:
     - sshpass-1.06-9.el8.x86_64.rpm
 ```
+
