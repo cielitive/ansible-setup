@@ -66,41 +66,45 @@ group:
 ###### RPMパッケージのインストールに使用する変数
 
 ```yaml
-### インストールするパッケージは、"package"roleのfilesディレクトリに配置
 group:
   rpm:
     - sshpass-1.06-9.el8.x86_64.rpm
+
+### インストールするパッケージは、"package"roleのfilesディレクトリに配置
 ```
 
 ###### 論理ボリュームの作成及び、論理ボリュームのマウントに使用する変数
 
 ```yaml
-### 
 group:
   lvm:
     - { device: sdb, part_num: 1, vg_name: vg01, pe_size: 32, lv_name: lv01, fs_type: xfs, mount_point: /app }
+
+### 
 ```
 
 ###### グループ作成に使用する変数
 
 ```yaml
-### 
 group:
   groups:
     - { name: grp00g, gid: 2100 }
+
+### 
 ```
 
 ###### ユーザ作成に使用する変数
 
 ```yaml
-### groups: オプションです。不要な場合は「''(シングルクォート)」とする
-### bash_profile: .bash_profileに追加する内容を記載するオプションです。不要な場合は定義不要です。
-### sudoers: sudoersファイルに追加する内容を記載するオプションです。不要な場合は定義不要です。
 group:
   users:
     - { name: usr01d, uid: 1001, group: grp01d, groups: grp00d, shell: /bin/bash, home: /home/usr01d, password: usr01d,
         bash_profile: "\nexport LANG=ja_JP\nexport PATH=$PATH:/usr/java/defalut/lib\n",
         sudoers: 'ALL=(ALL)       NOPASSWD: /usr/bin/systemctl * sshd' }
+
+### groups: オプションです。不要な場合は「''(シングルクォート)」とする
+### bash_profile: .bash_profileに追加する内容を記載するオプションです。不要な場合は定義不要です。
+### sudoers: sudoersファイルに追加する内容を記載するオプションです。不要な場合は定義不要です。
 ```
 
 ###### 
