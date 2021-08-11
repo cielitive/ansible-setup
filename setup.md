@@ -31,7 +31,16 @@ host_files_dir="{{ playbook_dir }}/files/{{ env }}/host_files/{{ inventory_hostn
 host_test_dir="{{ playbook_dir }}/test/{{ env }}/{{ inventory_hostname }}"
 ```
 
-#### 1-3. 変数ファイルを作成する
+#### 1-3. 資材を準備する
+
+```bash
+### hosts
+./files/production/(group_vars|host_vars)/(<GROUP>|<HOST>)/etc/hosts
+### public.xml
+./files/production/(group_vars|host_vars)/(<GROUP>|<HOST>)/etc/firewalld/zones/public.xml
+```
+
+#### 1-4. 変数ファイルを作成する
 
 - グループ用変数とホスト用変数で値が重複しないよう注意して定義する
 
@@ -167,4 +176,18 @@ host:
   firewall_rules:
     - { port: 9000, protocol: tcp, state: enabled }
     - { port: 9001, protocol: tcp, state: disabled }
+```
+
+#### 1-5. Playbookを作成する
+
+```yaml
+
+```
+
+## 2. 構築
+
+#### 2-1. 
+
+```bash
+$ ansible-playbook -i production site.yml
 ```
