@@ -93,16 +93,14 @@ group:
 ###### ユーザ作成に使用する変数
 
 ```yaml
-### 
+### groups: オプションです。不要な場合は「''(シングルクォート)」とする
+### bash_profile: .bash_profileに追加する内容を記載するオプションです。不要な場合は定義不要です。
+### sudoers: sudoersファイルに追加する内容を記載するオプションです。不要な場合は定義不要です。
 group:
   users:
     - { name: usr01d, uid: 1001, group: grp01d, groups: grp00d, shell: /bin/bash, home: /home/usr01d, password: usr01d,
         bash_profile: "\nexport LANG=ja_JP\nexport PATH=$PATH:/usr/java/defalut/lib\n",
         sudoers: 'ALL=(ALL)       NOPASSWD: /usr/bin/systemctl * sshd' }
-
-### groups: オプションです。不要な場合は「''(シングルクォート)」とする
-### bash_profile: .bash_profileに追加する内容を記載するオプションです。不要な場合は定義不要です。
-### sudoers: sudoersファイルに追加する内容を記載するオプションです。不要な場合は定義不要です。
 ```
 
 ###### 
