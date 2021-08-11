@@ -50,7 +50,7 @@ $ cp -rp ./production/group_vars/_template ./production/group_vars/<GROUP>
 $ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
 ```
 
-#### 必須変数
+##### 必須変数
 
 ###### グループ用変数
 
@@ -70,7 +70,7 @@ host:
   name: <HOST>          
 ```
 
-#### その他変数
+##### その他変数
 
 - インストールするパッケージは、"package"roleのfilesディレクトリに配置
 
