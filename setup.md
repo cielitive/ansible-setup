@@ -2,6 +2,10 @@
 
 #### 1-1. デスクトップ環境の自動起動を無効化する
 
+##### 変数定義における注意事項は以下となります
+
+- グループ(group_vars/<GROUP>)とホスト(host_vars/<HOST>)に定義する内容は、重複しないようにする
+
 ```bash
 $ systemctl disable display-manager
 Removed /etc/systemd/system/display-manager.service.
