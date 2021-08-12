@@ -1,193 +1,141 @@
-## 1. 事前準備
-
-#### 1-1. 構築用リポジトリをクローンする
+##### SSH ProxyCommand
 
 ```bash
-$ git clone <URL>
-```
-
-#### 1-2. インベントリファイルを作成する
-
-```bash
-$ cd <REPOSITORY>
-$ vim ./production/inventory/hosts
-
-### 以下の形式で作成する
+Host node02
+  HostName       192.168.8.22
+  User           root
+  IdentityFile   ~/work/virtualbox/vagrant/.ssh/id_rsa
+  ProxyCommand   ssh 192.168.3.50 -W %h:%p
 ```
 
 ```bash
-[<GROUP01>]
-<HOST01> ansible_host=<IP>
-<HOST02> ansible_host=<IP>
-
-[<GROUP02>]
-<HOST03> ansible_host=<IP>
-<HOST04> ansible_host=<IP>
-
-[all:vars]
-env=production
-group_files_dir="{{ playbook_dir }}/files/{{ env }}/group_files/{{ group.name }}"
-host_files_dir="{{ playbook_dir }}/files/{{ env }}/host_files/{{ inventory_hostname }}"
-host_test_dir="{{ playbook_dir }}/test/{{ env }}/{{ inventory_hostname }}"
+$ ssh -i ~/work/virtualbox/vagrant/.ssh/id_rsa \
+-o ProxyCommand='ssh -i ~/work/virtualbox/vagrant/.ssh/id_rsa root@192.168.3.50 -W %h:%p' \
+root@192.168.8.22
 ```
 
-#### 1-3. 資材を準備する
+#### .
 
 ```bash
-### hosts
-./files/production/(group_vars|host_vars)/(<GROUP>|<HOST>)/etc/hosts
-### public.xml
-./files/production/(group_vars|host_vars)/(<GROUP>|<HOST>)/etc/firewalld/zones/public.xml
+### yum & curl proxy
+export http_proxy=http://192.168.8.21:8080
+export https_proxy=http://192.168.8.21:8080
 ```
-
-#### 1-4. 変数ファイルを作成する
-
-- グループ用変数とホスト用変数で値が重複しないよう注意して定義する
 
 ```bash
-### グループ及び、ホストの変数テンプレートからコピー
-$ cp -rp ./production/group_vars/_template ./production/group_vars/<GROUP>
-$ cp -rp ./production/host_vars/_template ./production/host_vars/<HOST>
+$ yum install -y python36 python36-devel
+
+### download package
+$ mkdir -p /tmp/pkg/python36
+$ yum install --downloadonly --downloaddir=/tmp/pkg/python36 python36
+
+$ mkdir -p /tmp/pkg/python36-devel
+$ yum install --downloadonly --downloaddir=/tmp/pkg/python36-devel python36-devel
 ```
-
-##### 必須変数
-
-###### グループ用変数
-
-```yaml
-### 第一階層に"group"を定義
-group:
-  ### グループ名を定義　　　　　　　　　　　
-  name: <GROUP>          
-```
-
-###### ホスト用変数
-
-```yaml
-### 第一階層に"host"を定義
-host:
-  ### ホスト名を定義　　　　　　　　　　　
-  name: <HOST>          
-```
-
-##### その他変数
-
-- インストールするパッケージは、"package"roleのfilesディレクトリに配置
-
-```yaml
-### RPMパッケージインストール用
-(group|host):
-  rpm:
-    - sshpass-1.06-9.el8.x86_64.rpm
-
-# インストールするパッケージは、"package"roleのfilesディレクトリに配置
-```
-
-```yaml
-### 論理ボリュームの作成及び、論理ボリュームのマウント用
-(group|host):
-  lvm:
-    - { device: sdb, part_num: 1, vg_name: vg01, pe_size: 32, lv_name: lv01, fs_type: xfs, mount_point: /app }
-```
-
-```yaml
-### グループ作成用
-(group|host):
-  groups:
-    - { name: grp00g, gid: 2100 }
-```
-
-```yaml
-### ユーザ作成用
-(group|host):
-  users:
-    - { name: usr01g, uid: 2001, group: grp01g, groups: grp00g, shell: /bin/bash, home: /home/usr01g, password: usr01g }
-        bash_profile: "\nexport LANG=ja_JP\n",
-        sudoers: 'ALL=(ALL:ALL) NOPASSWD: ALL' }
-    - { name: usr02g, uid: 2002, group: grp02g, groups: '', shell: /bin/bash, home: /home/usr02g, password: usr02g }
-
-# groups: オプションです。不要な場合は「''(シングルクォート)」とする
-# bash_profile: 「$HOME/.bash_profile」に追加する内容を記載するオプションです。不要な場合は定義不要です。
-# sudoers: 「/etc/sudoers」ファイルに追加する内容を記載するオプションです。不要な場合は定義不要です。
-```
-
-```yaml
-### ディレクトリ作成用
-(group|host):
-  dirs:
-    - { path: /var/group01, owner: root, group: root, permit: '0755' }
-```
-
-```yaml
-### カーネル・パラメータ変更用
-(group|host):
-  sysctl:
-    - { key: vm.swappiness, value: 40 }
-```
-
-```yaml
-### リソースリミット変更用
-(group|host):
-  pam_limit:
-    - { domain: apache, type: soft, item: nofile, value: '10000' }
-    - { domain: apache, type: hard, item: nofile, value: '10000' }
-```
-
-```yaml
-### スタティック・ルーティング追加用
-(group|host):
-  static_route:
-    - { nic: enp0s9, cidr: '192.168.2.0/24', gateway: 192.168.100.1 }
-```
-
-```yaml
-### ファイアウォール・ルール追加用
-(group|host):
-  firewall_rules:
-    - { port: 9000, protocol: tcp, state: enabled }
-    - { port: 9001, protocol: tcp, state: disabled }
-```
-
-```yaml
-(group|host):
-  name: (<GROUP>|<HOST>)
-  rpm:
-    - sshpass-1.06-9.el8.x86_64.rpm
-  lvm:
-    - { device: sdb, part_num: 1, vg_name: vg01, pe_size: 32, lv_name: lv01, fs_type: xfs, mount_point: /app }
-  groups:
-    - { name: grp00g, gid: 2100 }
-    - { name: grp01g, gid: 2001 }
-    - { name: grp02g, gid: 2002 }
-  users:
-    - { name: usr01g, uid: 2001, group: grp01g, groups: grp00g, shell: /bin/bash, home: /home/usr01g, password: usr01g }
-        bash_profile: "\nexport LANG=ja_JP\n",
-        sudoers: 'ALL=(ALL:ALL) NOPASSWD: ALL' }
-    - { name: usr02g, uid: 2002, group: grp02g, groups: '', shell: /bin/bash, home: /home/usr02g, password: usr02g }
-  dirs:
-    - { path: /var/group01, owner: root, group: root, permit: '0755' }
-  sysctl:
-    - { key: vm.swappiness, value: 40 }
-  pam_limit:
-    - { domain: apache, type: soft, item: nofile, value: '10000' }
-    - { domain: apache, type: hard, item: nofile, value: '10000' }
-  static_route:
-    - { nic: enp0s9, cidr: '192.168.2.0/24', gateway: 192.168.100.1 }
-  firewall_rules:
-    - { port: 9000, protocol: tcp, state: enabled }
-    - { port: 9001, protocol: tcp, state: disabled }
-```
-
-#### 1-5. Playbookを作成する
-
-```yaml
-
-```
-
-## 2. 構築
-
-#### 2-1. 
 
 ```bash
-$ ansible-playbook -i production site.yml
+$ alternatives --config python
+$ python -V
+Python 3.6.8
+
+$ update-alternatives --install /usr/bin/pip pip /usr/bin/pip3 1
+$ pip -V
+pip 9.0.3 from /usr/lib/python3.6/site-packages (python 3.6)
+```
+
+#### 1.
+
+```bash
+$ dnf install -y epel-release.noarch
+$ dnf config-manager --set-disabled epel
+$ dnf --enablerepo=epel -y install sshpass python3 python3-devel
+
+$ pip3 install virtualenv
+$ python3 -m virtualenv ~/ansible
+$ source ~/ansible/bin/activate
+(ansible)$ pip3 install --upgrade pip
+### version check
+(ansible)$ pip3 install "ansible=="
+### install
+(ansible)$ pip3 install "ansible==3.0.0"
+(ansible)$ pip3 list
+Package      Version
+------------ -------
+ansible      2.10.7
+ansible-base 2.10.10
+
+(ansible)$ ansible --version
+ansible 2.10.10
+  config file = None
+  configured module search path = ['/root/.ansible/plugins/modules', '/usr/share/ansible/plugins/modules']
+  ansible python module location = /root/ansible/lib/python3.6/site-packages/ansible
+  executable location = /root/ansible/bin/ansible
+  python version = 3.6.8 (default, Nov 16 2020, 16:55:22) [GCC 4.8.5 20150623 (Red Hat 4.8.5-44)]
+```
+
+```bash
+$ python3 -m virtualenv -p /bin/python2.7 ~/2.7
+$ source ~/2.7/bin/activate
+(2.7)$ python -V
+Python 2.7.18
+(2.7)$ pip -V
+pip 20.3.4 from /root/2.7/lib/python2.7/site-packages/pip (python 2.7)
+```
+
+##### 2.
+
+```bash
+$ ansible-config dump
+$ ansible-config dump --only-changed
+```
+
+```bash
+$ export SSH_PASSWD="vagrant"
+$ export BECOME_PASSWD="vagrant"
+```
+
+```bash
+ansible_ssh_user: "{{ lookup('env','USER') }}"
+ansible_ssh_pass: "{{ lookup('env','SSH_PASSWD') }}"
+ansible_become_pass: "{{ lookup('env','BECOME_PASSWD') }}"
+```
+
+##### 3.
+
+```bash
+$ ansible -i production node02 -m ping --ask-pass
+SSH password:
+node02 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+##### 4.
+
+```bash
+### -B: バックグランド実行
+$ ansible all -i production -B 600 -m shell -a "yum update -y" -s --ask-pass
+(or)
+$ ansible all -i production -B 600 -m yum -a "name=* state=latest" -s --ask-pass
+```
+
+```bash
+### syntax check
+$ ansible-playbook -i production test.yml --syntax-check
+
+### dry run
+$ ansible-playbook -i production site.yml --ask-pass --check
+
+$ ansible-playbook -i production site.yml --ask-pass
+```
+
+##### 5. tips
+
+```bash
+### 変数優先度
+task vars > role vars > host_vars > group_vars > inventory host_vars > inventory group_vars > role defaults
 ```
