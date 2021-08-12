@@ -1,4 +1,6 @@
-#### 1. python
+## 1. Install "Python3.x"
+
+#### 1-1. 
 
 ```bash
 ### latest
@@ -28,13 +30,17 @@ $ pip -V
 pip 9.0.3 from /usr/lib/python3.6/site-packages (python 3.6)
 ```
 
-#### 2. ansible
+####  1-2. Install and use virtualenv
 
 ```bash
 $ pip3 install virtualenv
 $ python3 -m virtualenv ~/ansible
 $ source ~/ansible/bin/activate
 ```
+
+## 2. Install and use "Ansible"
+
+#### 2-1. Install
 
 ```bash
 (ansible)$ pip3 install --upgrade pip
@@ -57,14 +63,7 @@ ansible 2.10.10
   python version = 3.6.8 (default, Nov 16 2020, 16:55:22) [GCC 4.8.5 20150623 (Red Hat 4.8.5-44)]
 ```
 
-
-
-##### 2.
-
-```bash
-$ ansible-config dump
-$ ansible-config dump --only-changed
-```
+#### 2.
 
 ```bash
 $ export SSH_PASSWD="vagrant"
@@ -72,6 +71,8 @@ $ export BECOME_PASSWD="vagrant"
 ```
 
 ```bash
+### inventory
+[all:vars]
 ansible_ssh_user: "{{ lookup('env','USER') }}"
 ansible_ssh_pass: "{{ lookup('env','SSH_PASSWD') }}"
 ansible_become_pass: "{{ lookup('env','BECOME_PASSWD') }}"
@@ -123,7 +124,15 @@ Python 2.7.18
 pip 20.3.4 from /root/2.7/lib/python2.7/site-packages/pip (python 2.7)
 ```
 
-##### 5-2. SSH ProxyCommand
+#### 5-2. Using yum with Proxy Server
+
+```bash
+### yum & curl proxy
+export http_proxy=http://192.168.8.21:8080
+export https_proxy=http://192.168.8.21:8080
+```
+
+#### 5-3. SSH ProxyCommand
 
 ```bash
 Host node02
@@ -139,15 +148,14 @@ $ ssh -i ~/work/virtualbox/vagrant/.ssh/id_rsa \
 root@192.168.8.22
 ```
 
-##### proxy
-
-```bash
-### yum & curl proxy
-export http_proxy=http://192.168.8.21:8080
-export https_proxy=http://192.168.8.21:8080
-```
+#### 5-4. ansible
 
 ```bash
 ### 変数優先度
 task vars > role vars > host_vars > group_vars > inventory host_vars > inventory group_vars > role defaults
+```
+
+```bash
+$ ansible-config dump
+$ ansible-config dump --only-changed
 ```
