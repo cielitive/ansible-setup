@@ -1,25 +1,10 @@
-##### SSH ProxyCommand
+#### 1. python
 
 ```bash
-Host node02
-  HostName       192.168.8.22
-  User           root
-  IdentityFile   ~/work/virtualbox/vagrant/.ssh/id_rsa
-  ProxyCommand   ssh 192.168.3.50 -W %h:%p
-```
-
-```bash
-$ ssh -i ~/work/virtualbox/vagrant/.ssh/id_rsa \
--o ProxyCommand='ssh -i ~/work/virtualbox/vagrant/.ssh/id_rsa root@192.168.3.50 -W %h:%p' \
-root@192.168.8.22
-```
-
-#### .
-
-```bash
-### yum & curl proxy
-export http_proxy=http://192.168.8.21:8080
-export https_proxy=http://192.168.8.21:8080
+### latest
+$ dnf install -y epel-release.noarch
+$ dnf config-manager --set-disabled epel
+$ dnf --enablerepo=epel -y install sshpass python3 python3-devel
 ```
 
 ```bash
@@ -43,16 +28,15 @@ $ pip -V
 pip 9.0.3 from /usr/lib/python3.6/site-packages (python 3.6)
 ```
 
-#### 1.
+#### 2. ansible
 
 ```bash
-$ dnf install -y epel-release.noarch
-$ dnf config-manager --set-disabled epel
-$ dnf --enablerepo=epel -y install sshpass python3 python3-devel
-
 $ pip3 install virtualenv
 $ python3 -m virtualenv ~/ansible
 $ source ~/ansible/bin/activate
+```
+
+```bash
 (ansible)$ pip3 install --upgrade pip
 ### version check
 (ansible)$ pip3 install "ansible=="
@@ -73,14 +57,7 @@ ansible 2.10.10
   python version = 3.6.8 (default, Nov 16 2020, 16:55:22) [GCC 4.8.5 20150623 (Red Hat 4.8.5-44)]
 ```
 
-```bash
-$ python3 -m virtualenv -p /bin/python2.7 ~/2.7
-$ source ~/2.7/bin/activate
-(2.7)$ python -V
-Python 2.7.18
-(2.7)$ pip -V
-pip 20.3.4 from /root/2.7/lib/python2.7/site-packages/pip (python 2.7)
-```
+
 
 ##### 2.
 
@@ -133,7 +110,42 @@ $ ansible-playbook -i production site.yml --ask-pass --check
 $ ansible-playbook -i production site.yml --ask-pass
 ```
 
-##### 5. tips
+## 5. Tips
+
+#### 5-1. Use a different version of python
+
+```bash
+$ python3 -m virtualenv -p /bin/python2.7 ~/2.7
+$ source ~/2.7/bin/activate
+(2.7)$ python -V
+Python 2.7.18
+(2.7)$ pip -V
+pip 20.3.4 from /root/2.7/lib/python2.7/site-packages/pip (python 2.7)
+```
+
+##### 5-2. SSH ProxyCommand
+
+```bash
+Host node02
+  HostName       192.168.8.22
+  User           root
+  IdentityFile   ~/work/virtualbox/vagrant/.ssh/id_rsa
+  ProxyCommand   ssh 192.168.3.50 -W %h:%p
+```
+
+```bash
+$ ssh -i ~/work/virtualbox/vagrant/.ssh/id_rsa \
+-o ProxyCommand='ssh -i ~/work/virtualbox/vagrant/.ssh/id_rsa root@192.168.3.50 -W %h:%p' \
+root@192.168.8.22
+```
+
+##### proxy
+
+```bash
+### yum & curl proxy
+export http_proxy=http://192.168.8.21:8080
+export https_proxy=http://192.168.8.21:8080
+```
 
 ```bash
 ### 変数優先度
