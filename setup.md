@@ -1,6 +1,6 @@
 ## 1. Install "Python3.x"
 
-#### 1-1. 
+#### 1-1. Install
 
 ```bash
 ### latest
@@ -63,7 +63,7 @@ ansible 2.10.10
   python version = 3.6.8 (default, Nov 16 2020, 16:55:22) [GCC 4.8.5 20150623 (Red Hat 4.8.5-44)]
 ```
 
-#### 2.
+#### 2-2. Set user credentials.
 
 ```bash
 $ export SSH_PASSWD="vagrant"
@@ -73,12 +73,12 @@ $ export BECOME_PASSWD="vagrant"
 ```bash
 ### inventory
 [all:vars]
-ansible_ssh_user: "{{ lookup('env','USER') }}"
+# ansible_ssh_user: "{{ lookup('env','USER') }}"
 ansible_ssh_pass: "{{ lookup('env','SSH_PASSWD') }}"
 ansible_become_pass: "{{ lookup('env','BECOME_PASSWD') }}"
 ```
 
-##### 3.
+##### 2-3. Connection test
 
 ```bash
 $ ansible -i production node02 -m ping --ask-pass
@@ -90,15 +90,6 @@ node02 | SUCCESS => {
     "changed": false,
     "ping": "pong"
 }
-```
-
-##### 4.
-
-```bash
-### -B: バックグランド実行
-$ ansible all -i production -B 600 -m shell -a "yum update -y" -s --ask-pass
-(or)
-$ ansible all -i production -B 600 -m yum -a "name=* state=latest" -s --ask-pass
 ```
 
 ```bash
@@ -150,12 +141,25 @@ root@192.168.8.22
 
 #### 5-4. ansible
 
+##### 
+
 ```bash
 ### 変数優先度
 task vars > role vars > host_vars > group_vars > inventory host_vars > inventory group_vars > role defaults
 ```
 
+##### Check the set value
+
 ```bash
 $ ansible-config dump
 $ ansible-config dump --only-changed
+```
+
+##### Execute background task
+
+```bash
+### -B: バックグランド実行
+$ ansible all -i production -B 600 -m shell -a "yum update -y" -s --ask-pass
+(or)
+$ ansible all -i production -B 600 -m yum -a "name=* state=latest" -s --ask-pass
 ```
