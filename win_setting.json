@@ -1,0 +1,161 @@
+{
+  "update.mode": "manual",
+  "workbench.startupEditor": "newUntitledFile",
+  "workbench.editor.enablePreview": false,
+  "workbench.colorTheme": "GitHub Dark",
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.colorCustomizations": {
+    "[GitHub Dark]": {
+      "editor.selectionBackground": "#49515F",
+      "editor.selectionHighlightBackground": "#323741",
+      "editor.selectionHighlightBorder": "#323741",
+      "editorError.foreground": "#00000000",
+      "editorWarning.foreground": "#00000000",
+      "tab.activeBorderTop": "#00000000",
+      "activityBar.border": "#00000000",
+      "activityBar.activeBorder": "#0366d6",
+      "focusBorder": "#24292e",
+      "sash.hoverBorder": "#24292e",
+      "sideBar.border": "#24292e",
+      "sideBarSectionHeader.border": "#1f2428",
+      "list.hoverBackground": "#24292e",
+      "list.hoverForeground": "#c4c9d2",
+      "list.activeSelectionBackground": "#24292e",
+      "list.activeSelectionForeground": "#c4c9d2",
+      "list.inactiveSelectionBackground": "#24292e",
+      "list.inactiveSelectionForeground": "#c4c9d2",
+      "list.inactiveFocusBackground": "#24292e",
+      "statusBar.background": "#1f2428",
+      "statusBar.border": "#1f2428",
+      "panel.border": "#24292e",
+      "panelTitle.activeBorder": "#00000000"
+    }
+  },
+  "editor.tokenColorCustomizations": {
+    "[GitHub Dark]": {
+      "comments": "#6c6c6c",
+      "textMateRules": [
+        {
+          "name": "Keyword",
+          "scope": "keyword",
+          "settings": {
+            "foreground": "#d68189"
+          }
+        },
+        {
+          "name": "Variable",
+          "scope": "variable.other",
+          "settings": {
+            "foreground": "#ffbc42"
+          }
+        }
+      ]
+    }
+  },
+  "editor.fontFamily": "'Roboto Mono'",
+  "editor.fontSize": 12,
+  "editor.minimap.enabled": false,
+  "editor.multiCursorModifier": "ctrlCmd",
+  "editor.formatOnPaste": true,
+  "editor.renderLineHighlight": "gutter",
+  "editor.hideCursorInOverviewRuler": true,
+  "editor.matchBrackets": "never",
+  "editor.roundedSelection": true,
+  "editor.wordWrap": "on",
+  "editor.quickSuggestions": {
+    "comments": false,
+    "strings": true,
+    "other": true
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.xlsx": true,
+    "**/.xlsm": true
+  },
+  "search.exclude": {
+    "**/node_modules": true
+  },
+  "files.eol": "\n",
+  "files.insertFinalNewline": true,
+  "terminal.integrated.profiles.windows": {
+    "Git Bash": {
+      "path": "C:\\cmd\\PortableGit\\bin\\bash.exe"
+    },
+    "PowerShell": {
+      "source": "PowerShell"
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.fontFamily": "'Roboto Mono'",
+  "terminal.integrated.fontSize": 12,
+  "terminal.integrated.fontWeight": "400",
+  "terminal.integrated.cursorStyle": "line",
+  "timeline.excludeSources": [],
+  // git
+  "git.path": "C:\\cmd\\PortableGit\\bin\\git.exe",
+  "git.ignoreWindowsGit27Warning": true,
+  "git.ignoreMissingGitWarning": true,
+  // Extension: go
+  "go.toolsManagement.autoUpdate": true,
+  "go.useLanguageServer": true,
+  "go.formatTool": "goimports",
+  "go.lintTool": "golangci-lint",
+  "go.lintOnSave": "package",
+  "go.lintFlags": ["--config=${workspaceFolder}/.golangci.yaml", "--fast"],
+  "go.alternateTools": {
+    "go-langserver": "gopls"
+  },
+  "gopls": {
+    "ui.completion.usePlaceholders": false,
+    "ui.documentation.hoverKind": "NoDocumentation"
+  },
+  "go.delveConfig": {
+    "dlvLoadConfig": {
+      "followPointers": true,
+      "maxVariableRecurse": 1,
+      "maxStringLen": 64,
+      "maxArrayValues": 64,
+      "maxStructFields": -1
+    },
+    "apiVersion": 2,
+    "showGlobalVariables": true
+  },
+  // Extension: RedHat, yaml
+  "redhat.telemetry.enabled": false,
+  "yaml.format.singleQuote": true,
+  "yaml.customTags": ["!encrypted/pkcs1-oaep scalar", "!vault scalar"],
+  "yaml.schemaStore.enable": false,
+  // Language
+  "editor.defaultFormatter": null,
+  "editor.formatOnSave": false,
+  "eslint.format.enable": false,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "files.associations": {
+    "hosts": "ini"
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "redhat.vscode-yaml",
+    "editor.formatOnSave": false
+  },
+  "[markdown]": {
+    "editor.formatOnSave": false
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  }
+}
