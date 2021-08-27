@@ -1,3 +1,7 @@
+```bash
+PS1="\[\033[0;36m\][\t \u@\h:\w]\$ "
+```
+
 ## 1. Install "Python3.x"
 
 #### 1-1. Install
