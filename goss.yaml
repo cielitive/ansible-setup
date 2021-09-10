@@ -1,0 +1,132 @@
+---
+- name: Create test directory
+  file:
+    path: /tmp/goss
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  tags:
+    - goss
+
+- name: Copy executable file for "goss"
+  copy:
+    src: goss
+    dest: /tmp/goss/goss
+    owner: root
+    group: root
+    mode: '0755'
+  tags:
+    - goss
+
+- name: Create template file for goss
+  copy:
+    dest: /tmp/goss/template.yaml
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      gossfile:
+  tags:
+    - goss     
+
+- name: Distribute test files for all hosts
+  copy:
+    src: "{{ test_dir }}/{{ env }}/all/{{ category }}.yaml"
+    dest: /tmp/goss/{{ category }}.yaml
+    owner: root
+    group: root
+    mode: '0644'
+  with_first_found:
+    - files:
+      - "{{ test_dir }}/{{ env }}/all/{{ category }}.yaml"
+      skip: yes
+  register: result
+  tags:
+    - goss
+
+- name: Add tests for all hosts to template
+  lineinfile:
+    dest: /tmp/goss/template.yaml
+    line: "  {{ category }}.yaml: {}"
+  when: result is not skipped
+  tags:
+    - goss
+
+- name: Distribute test files for "Group"
+  copy:
+    src: "{{ group_test_dir }}/{{ category }}.yaml"
+    dest: "/tmp/goss/{{ group.name }}.yaml"
+    owner: root
+    group: root
+    mode: '0644'
+  with_first_found:
+    - files:
+      - "{{ group_test_dir }}/{{ category }}.yaml"
+      skip: yes
+  register: result
+  tags:
+    - goss
+
+- name: Add tests for Group to template
+  lineinfile:
+    dest: /tmp/goss/template.yaml
+    line: "  {{ group.name }}.yaml: {}"
+  when: result is not skipped
+  tags:
+    - goss
+
+- name: Distribute test files for "Host"
+  copy:
+    src: "{{ host_test_dir }}/{{ category }}.yaml"
+    dest: "/tmp/goss/{{ inventory_hostname }}.yaml"
+    owner: root
+    group: root
+    mode: '0644'
+  with_first_found:
+    - files:
+      - "{{ host_test_dir }}/{{ category }}.yaml"
+      skip: yes
+  register: result
+  tags:
+    - goss
+
+- name: Add tests for host to template
+  lineinfile:
+    dest: /tmp/goss/template.yaml
+    line: "  {{ inventory_hostname }}.yaml: {}"
+  when: result is not skipped
+  tags:
+    - goss
+
+- name: Run the test
+  shell: /tmp/goss/goss -g template.yaml render >/tmp/goss/goss.yaml
+  args:
+    chdir: /tmp/goss 
+  register: result
+  failed_when: result.rc not in [0, 1]
+  tags:
+    - goss
+
+- name: Run the test
+  shell: /tmp/goss/goss --gossfile /tmp/goss/goss.yaml validate --format tap >/tmp/goss/goss_result.log
+  register: result
+  failed_when: result.rc not in [0, 1]
+  tags:
+    - goss
+
+- name: Get test result file
+  fetch:
+    src: /tmp/goss/goss_result.log
+    dest: "{{ host_test_dir }}/goss_result.log"
+    flat: yes
+    fail_on_missing: no
+  tags:
+    - goss
+
+- name: Delete test directory
+  file:
+    path: /tmp/goss
+    state: absent
+  tags:
+    - goss
