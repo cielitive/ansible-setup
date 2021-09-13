@@ -30,6 +30,14 @@
   tags:
     - goss     
 
+- name: (pre) Check test files for all hosts
+  local_action:
+    module: stat
+    path: "{{ test_dir }}/{{ env }}/all/{{ category }}.yaml"
+  register: result_all
+  tags:
+    - goss
+
 - name: Distribute test files for all hosts
   copy:
     src: "{{ test_dir }}/{{ env }}/all/{{ category }}.yaml"
@@ -37,11 +45,7 @@
     owner: root
     group: root
     mode: '0644'
-  with_first_found:
-    - files:
-      - "{{ test_dir }}/{{ env }}/all/{{ category }}.yaml"
-      skip: yes
-  register: result
+  when: result_all.stat.exists
   tags:
     - goss
 
@@ -49,7 +53,15 @@
   lineinfile:
     dest: /tmp/goss/template.yaml
     line: "  {{ category }}.yaml: {}"
-  when: result is not skipped
+  when: result_all.stat.exists
+  tags:
+    - goss
+
+- name: (pre) Check test files for "Group"
+  local_action:
+    module: stat
+    path: "{{ group_test_dir }}/{{ category }}.yaml"
+  register: result_group
   tags:
     - goss
 
@@ -60,11 +72,7 @@
     owner: root
     group: root
     mode: '0644'
-  with_first_found:
-    - files:
-      - "{{ group_test_dir }}/{{ category }}.yaml"
-      skip: yes
-  register: result
+  when: result_group.stat.exists
   tags:
     - goss
 
@@ -72,7 +80,15 @@
   lineinfile:
     dest: /tmp/goss/template.yaml
     line: "  {{ group.name }}.yaml: {}"
-  when: result is not skipped
+  when: result_group.stat.exists
+  tags:
+    - goss
+
+- name: (pre) Check test files for "Host"
+  local_action:
+    module: stat
+    path: "{{ host_test_dir }}/{{ category }}.yaml"
+  register: result_host
   tags:
     - goss
 
@@ -83,11 +99,7 @@
     owner: root
     group: root
     mode: '0644'
-  with_first_found:
-    - files:
-      - "{{ host_test_dir }}/{{ category }}.yaml"
-      skip: yes
-  register: result
+  when: result_host.stat.exists
   tags:
     - goss
 
@@ -95,7 +107,7 @@
   lineinfile:
     dest: /tmp/goss/template.yaml
     line: "  {{ inventory_hostname }}.yaml: {}"
-  when: result is not skipped
+  when: result_host.stat.exists
   tags:
     - goss
 
