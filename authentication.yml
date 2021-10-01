@@ -1,0 +1,22 @@
+---
+- name: create user
+  user:
+    name: "{{ user }}"
+    uid: 1040
+    group: infra
+    generate_ssh_key: yes
+
+- name: fetch
+  fetch:
+    src: "/home/{{ user }}/.ssh/id_rsa.pub"
+    dest: "{{ all_files_dir }}/.ssh/{{ inventory_hostname }}/{{ user }}_id_rsa.pub"
+    flat: yes
+
+
+---
+- name: Set authorized key taken from file
+  authorized_key:
+    user: "{{ item.dest_user }}"
+    state: present
+    key: "{{ lookup('file', all_files_dir + '/.ssh/' + item.src_host + '/' + item.src_user + '_id_rsa.pub') }}"
+  loop: "{{ ssh_copy_id }}"
