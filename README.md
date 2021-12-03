@@ -1,3 +1,5 @@
-    owner: "{{ item.owner | default('root') }}"
-    group: "{{ item.group | default('root') }}"
-    mode: "{{ item.permit | default('0755') }}"
+SCRUM BOOT CAMP THE BOOK【増補改訂版】 スクラムチームではじめるアジャイル開発
+SCRUMMASTER THE BOOK 優れたスクラムマスターになるための極意
+アジャイルなチームをつくる ふりかえりガイドブック 始め方・ふりかえりの型・手法・マインドセット
+エンタープライズアジャイル開発実践ガイド
+カイゼン・ジャーニー たった1人からはじめて、「越境」するチームをつくるまで
