@@ -1,4 +1,0 @@
----
-zabbix_rpm_file: "zabbix-agent-4.0.32-1.el8.x86_64.rpm"
-zabbix_server: 10.0.0.1
-listen_ip: 10.0.0.100
