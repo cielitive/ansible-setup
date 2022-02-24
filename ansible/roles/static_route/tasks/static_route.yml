@@ -1,0 +1,20 @@
+---
+# [vars]
+# static_route:
+#   ens192:
+#     - { cidr: 192.168.10.0/24, gw: 192.168.8.1 }
+#     - { cidr: 192.168.11.0/24, gw: 192.168.8.1 }
+#   ens224:
+#     - { cidr: 192.168.20.0/24, gw: 192.168.8.1 }
+#     - { cidr: 192.168.21.0/24, gw: 192.168.8.1 }
+
+- name: "ルーティング設定初期化 <{{ connection.key }}>"
+  shell: "nmcli connection modify '{{ connection.key }}' ipv4.routes ''"
+
+- name: "ルーティング設定 <{{ connection.key }}>"
+  shell: "nmcli connection modify '{{ connection.key }}' +ipv4.routes '{{ item.cidr }} {{ item.gw }}'"
+  loop: "{{ connection.value }}"
+
+- name: "ルーティング適用 <{{ connection.key }}>"
+  shell: "nmcli connection up '{{ connection.key }}'"
+

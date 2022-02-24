@@ -1,0 +1,37 @@
+---
+# [vars]
+# packages:
+#   - { name: wget, min_version: 1.19.5 }
+#   - { name: tcpdump, min_version: 4.9.3 }
+
+- name: "前提パッケージの状況確認 <{{ package.name }}>"
+  yum:
+    list: "{{ package.name }}"
+    state: installed
+  register: result
+
+- name: インストール済み前提パッケージの情報取得
+  set_fact:
+    installed_package: "{{ result.results  | selectattr('yumstate', 'eq', 'installed') | list }}"
+
+- block:
+  - name: インストール資材を配布
+    copy:
+      src: "{{ rpm_package_dir }}/{{ package.name }}/"
+      dest: /tmp/rpm
+      owner: root
+      group: root
+      mode: '0644'
+
+  - name: rpmパッケージをインストール
+    shell: echo "test" >/tmp/rpm/test
+
+  - name: インストール資材を削除
+    file:
+      path: /tmp/rpm
+      state: absent
+
+  when: >
+    (not installed_package) or
+    (installed_package[0].version is version(package.min_version, '<'))
+

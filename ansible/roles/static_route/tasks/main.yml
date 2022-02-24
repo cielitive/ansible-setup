@@ -1,0 +1,6 @@
+---
+- name: スタティックルート設定
+  include_tasks: static_route.yml
+  loop: "{{ static_route|dict2items }}"
+  loop_control:
+    loop_var: connection

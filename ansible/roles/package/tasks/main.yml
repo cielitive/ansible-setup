@@ -1,0 +1,6 @@
+---
+- name: 前提パッケージのインストール
+  include_tasks: package.yml
+  loop: "{{ packages }}"
+  loop_control:
+    loop_var: package
