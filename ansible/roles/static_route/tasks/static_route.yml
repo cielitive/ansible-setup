@@ -8,13 +8,22 @@
 #     - { cidr: 192.168.20.0/24, gw: 192.168.8.1 }
 #     - { cidr: 192.168.21.0/24, gw: 192.168.8.1 }
 
-- name: "ルーティング設定初期化 <{{ connection.key }}>"
-  shell: "nmcli connection modify '{{ connection.key }}' ipv4.routes ''"
+# - name: "スタティックルート初期化 <{{ connection.key }}>"
+#   shell: "nmcli connection modify '{{ connection.key }}' ipv4.routes ''"
 
-- name: "ルーティング設定 <{{ connection.key }}>"
+- name: "スタティックルート追加 <{{ connection.key }}>"
   shell: "nmcli connection modify '{{ connection.key }}' +ipv4.routes '{{ item.cidr }} {{ item.gw }}'"
   loop: "{{ connection.value }}"
+  when: >
+    (item.state is not defined) or
+    (item.state != "absent")
+
+# - name: "スタティックルート削除 <{{ connection.key }}>"
+#   shell: "nmcli connection modify '{{ connection.key }}' -ipv4.routes '{{ item.cidr }} {{ item.gw }}'"
+#   loop: "{{ connection.value }}"
+#   when: >
+#     (item.state is defined) and
+#     (item.state == "absent")
 
 - name: "ルーティング適用 <{{ connection.key }}>"
   shell: "nmcli connection up '{{ connection.key }}'"
-
