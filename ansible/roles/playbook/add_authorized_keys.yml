@@ -7,29 +7,30 @@
   gather_facts: false
 
   vars:
+    ### ansible-playboook -i inventories/xxx -l xxx -e "ssh_user=root ssh_host=master" add_authorized_keys.yml
+    ssh_user: root
+    ssh_host: master
     ssh_authkey:
-      - user: root
+      - user: "{{ ssh_user }}"
         dest:
-          - host: master
-            user: vagrant
-          - host: master
-            user: vagrant
+          - host: "{{ ssh_host }}"
+            user: "{{ ssh_user }}"
 
   tasks:
-    - name: "認証鍵作成 <{{ outer.user }}>"
+    - name: 認証鍵作成
       user:
         name: "{{ item.user }}"
         generate_ssh_key: yes
       loop: "{{ ssh_authkey }}"
 
-    - name: "公開鍵取得 <{{ outer.user }}>"
+    - name: 公開鍵取得
       fetch:
         src: "{% if item.user=='root' %}/{{ item.user }}/.ssh/id_rsa.pub{% else %}/home/{{ item.user }}/.ssh/id_rsa.pub{% endif %}"
         dest: "{{ host_files_dir }}/.ssh/{{ item.user }}_id_rsa.pub"
         flat: yes
       loop: "{{ ssh_authkey }}"
 
-    - name: "公開鍵配布 <{{ outer.user }}>"
+    - name: 公開鍵配布
       local_action:
         module: shell
         cmd: ansible -i inventories/production {{ item.1.host }} -m authorized_key -a "user={{ item.1.user }} state=present key=\"{{ lookup('file', host_files_dir + '/.ssh/' + item.0.user + '_id_rsa.pub') }}\""
