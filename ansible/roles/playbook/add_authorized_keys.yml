@@ -1,0 +1,37 @@
+---
+- name: 認証鍵作成・公開鍵配布
+  hosts: all
+  remote_user: root
+  # become: true
+  # become_method: sudo
+  gather_facts: false
+
+  vars:
+    ssh_authkey:
+      - user: root
+        dest:
+          - host: master
+            user: vagrant
+          - host: master
+            user: vagrant
+
+  tasks:
+    - name: "認証鍵作成 <{{ outer.user }}>"
+      user:
+        name: "{{ item.user }}"
+        generate_ssh_key: yes
+      loop: "{{ ssh_authkey }}"
+
+    - name: "公開鍵取得 <{{ outer.user }}>"
+      fetch:
+        src: "{% if item.user=='root' %}/{{ item.user }}/.ssh/id_rsa.pub{% else %}/home/{{ item.user }}/.ssh/id_rsa.pub{% endif %}"
+        dest: "{{ host_files_dir }}/.ssh/{{ item.user }}_id_rsa.pub"
+        flat: yes
+      loop: "{{ ssh_authkey }}"
+
+    - name: "公開鍵配布 <{{ outer.user }}>"
+      local_action:
+        module: shell
+        cmd: ansible -i inventories/production {{ item.1.host }} -m authorized_key -a "user={{ item.1.user }} state=present key=\"{{ lookup('file', host_files_dir + '/.ssh/' + item.0.user + '_id_rsa.pub') }}\""
+      loop: "{{ ssh_authkey|subelements('dest') }}"
+
