@@ -1,0 +1,12 @@
+---
+# ansible-playbook -i inventories/production -l node01 -e "debug=always role=goss" debug.yml
+- name: debugger
+  hosts: all
+  debugger: "{{ debug|default('never') }}"
+  remote_user: ansible
+  become: true
+  become_method: sudo
+  # gather_facts: false
+
+  roles:
+    - role: "{{ role }}"
