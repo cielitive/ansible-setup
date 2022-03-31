@@ -1,0 +1,4 @@
+msg: "/etc/sudoers.d/{{ user | regex_replace('\\d.*', '') }}"
+
+### template
+{{ item.name }} systemctl * {{ item.name | regex_replace('^[a-z]+0+', '') }}.service
