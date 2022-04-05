@@ -13,3 +13,28 @@ ACTION=="add|change", SUBSYSTEMS=="scsi", ATTRS{type}=="0|7|14", ATTR{device/tim
 udevadm trigger /dev/<device>
 
 udevadm control --reload
+
+
+vim /etc/rc.d/rc.local
+---
+for d in `ls /dev/sd* | egrep "sd[a-z]$"`
+do
+  echo 180 > /sys/block/`basename $d`/device/timeout
+done
+
+exit 0
+
+chmod 755 /etc/rc.local /etc/rc.d/rc.local
+
+vim /etc/systemd/system/rc-local.service
+---
+[Unit]
+Description=/etc/rc.d/rc.local Compatibility
+ConditionFileIsExecutable=/etc/rc.d/rc.local
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/etc/rc.d/rc.local start
+TimeoutSec=0
+RemainAfterExit=yes
