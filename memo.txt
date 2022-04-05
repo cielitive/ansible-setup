@@ -11,3 +11,5 @@ vim /etc/udev/rules.d/99-udev.rules
 ACTION=="add|change", SUBSYSTEMS=="scsi", ATTRS{type}=="0|7|14", ATTR{device/timeout}="60"
 
 udevadm trigger /dev/<device>
+
+udevadm control --reload
