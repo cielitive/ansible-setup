@@ -3,4 +3,11 @@ msg: "/etc/sudoers.d/{{ user | regex_replace('\\d.*', '') }}"
 ### template
 {{ item.name }} systemctl * {{ item.name | regex_replace('^[a-z]+0+', '') }}.service
 
-firewall-cmd --add-rich-rule='rule family="ipv4" source address="10.16.20.0/24" protocol value="icmp" accept' --permanent
+
+
+
+vim /etc/udev/rules.d/99-udev.rules
+
+ACTION=="add|change", SUBSYSTEMS=="scsi", ATTRS{type}=="0|7|14", ATTR{device/timeout}="60"
+
+udevadm trigger /dev/<device>
