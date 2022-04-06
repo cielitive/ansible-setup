@@ -38,3 +38,6 @@ Type=forking
 ExecStart=/etc/rc.d/rc.local start
 TimeoutSec=0
 RemainAfterExit=yes
+
+
+https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/s/screen-4.6.2-12.el8.x86_64.rpm
