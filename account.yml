@@ -1,0 +1,37 @@
+---
+- name: debug
+  stat:
+    path: "{{ item.name }}.j2"
+  delegate_to: localhost
+  register: result
+
+- name: msg
+  copy:
+    src: "{{ item.name }}.j2"
+    dest: "/tmp/{{ item.name }}"
+    owner: root
+    group: root
+    mode: '0644'
+  when: result.stat.exists
+  register: result
+
+- name: debug
+  stat:
+    path: "{{ item.name }}.j2.j2"
+  delegate_to: localhost
+  when: result.skipped is defined and result.skipped
+  register: result
+
+- name: msg
+  copy:
+    src: "{{ item.name }}.j2.j2"
+    dest: "/tmp/{{ item.name }}"
+    owner: root
+    group: root
+    mode: '0644'
+  when: result.stat.exists is defined and result.stat.exists
+  register: result
+
+- name: msg
+  debug:
+    msg: "{{ result }}"
