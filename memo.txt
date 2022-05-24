@@ -43,3 +43,20 @@ RemainAfterExit=yes
 https://dl.fedoraproject.org/pub/epel/8/Everything/x86_64/Packages/s/screen-4.6.2-12.el8.x86_64.rpm
 
 callback_whitelist = profile_tasks
+
+
+指紋リーダーによる認証無効化と"/etc/nsswitch.conf", "/etc/pam.d/system-auth"の設定変更方法についてご教示ください。
+以下コマンドを実行し指紋リーダーによる認証を無効化したところエラーが出力されました。
+
+■無効化コマンド
+authselect disable-feature with-fingerprint
+
+■エラー
+
+
+エラーの原因としては"/etc/nsswitch.conf", "/etc/pam.d/system-auth"を直接変更してしまったことが原因かと思いますが、
+RHEL8では"/etc/nsswitch.conf", "/etc/pam.d/system-auth"の修正をどのように実施すればいいでしょうか？
+また、指紋リーダーによる認証無効化手順は、上記で記載したコマンドで問題なかったでしょうか？
+
+以上、
+ご回答よろしくお願い致します。
