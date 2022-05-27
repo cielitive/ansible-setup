@@ -1,0 +1,60 @@
+---
+- name: Check custom profile
+  stat:
+    path: /etc/authselect/custom/sssd-custom
+  register: result
+  tags: [ system-auth ]
+
+- name: Create custom profile
+  shell: authselect create-profile sssd-custom -b sssd
+  when: not result.stat.exists
+  tags: [ system-auth ]
+
+- name: Check current profile
+  shell: "authselect current | head -1 | grep 'custom/sssd-custom'"
+  changed_when: result.rc == 1
+  failed_when: result.rc not in [0, 1]
+  register: result
+  tags: [ system-auth ]
+
+- name: Set profile
+  shell: authselect select custom/sssd-custom
+  when: result.rc == 1
+  tags: [ system-auth ]
+
+- name: Check authselect feature
+  shell: "authselect current | grep 'with-fingerprint'"
+  changed_when: result.rc == 0
+  failed_when: result.rc not in [0, 1]
+  register: result
+  tags: [ system-auth ]
+
+- name: Disable fingerprint authenticate
+  shell: authselect disable-feature with-fingerprint
+  when: result.rc == 0
+  tags: [ system-auth ]
+
+- name: Update NSS configuration file
+  template:
+    src: etc/authselect/user-nsswitch.conf
+    dest: /etc/authselect/user-nsswitch.conf
+    owner: root
+    group: root
+    mode: '0644'
+  register: nss
+  tags: [ system-auth ]
+
+- name: Update PAM configuration file
+  template:
+    src: etc/authselect/custom/sssd-custom/system-auth
+    dest: /etc/authselect/custom/sssd-custom/system-auth
+    owner: root
+    group: root
+    mode: '0644'
+  register: pam
+  tags: [ system-auth ]
+
+- name: Apply the changes
+  shell: authselect apply-changes
+  when: nss.changed or pam.changed
+  tags: [ system-auth ]
