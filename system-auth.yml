@@ -54,7 +54,26 @@
   register: pam
   tags: [ system-auth ]
 
-- name: Apply the changes
+- name: Apply the changes for authselect
   shell: authselect apply-changes
   when: nss.changed or pam.changed
   tags: [ system-auth ]
+
+- name: Update password policy
+  template:
+    src: etc/login.defs
+    dest: /etc/login.defs
+    owner: root
+    group: root
+    mode: '0644'
+  tags: [ system-auth ]
+
+- name: Restrict use of su command
+  template:
+    src: etc/pam.d/su
+    dest: /etc/pam.d/su
+    owner: root
+    group: root
+    mode: '0644'
+  tags: [ system-auth ]
+  
