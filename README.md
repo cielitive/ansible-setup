@@ -8,7 +8,7 @@ ansible-setup
 ip --oneline -4 addr | egrep -v "^1:" | awk '{print $2":\n  exists: true\n  aadrs:\n  - "$4}'
 ```
 
-
+```
 ServerLimit (default: 16)
 - プロセス数の上限
 - ( "MaxRequestWorkers" / "ThreadsPerChild" )より大きい値
@@ -34,3 +34,4 @@ MaxSpareThreads (default: 250)
 MaxConnectionsPerChild (default: 10000)
 - プロセスが指定した回数の接続を受け付けたらプロセスを終了する
 - "0"を指定すると終了しない
+```
