@@ -33,5 +33,8 @@ MaxSpareThreads (default: 250)
   - ThreadsPerChild(20), MinSpareThreads(50), MaxSpareThreads(50)の場合: "MaxSpareThreads"を超えてIdleスレッド数は"60(busy: 1)"
 MaxConnectionsPerChild (default: 10000)
 - プロセスが指定した回数の接続を受け付けたらプロセスを終了する
+
+
+m2818645114@dea-21olympic.com
 - "0"を指定すると終了しない
 ```
