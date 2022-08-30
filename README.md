@@ -38,3 +38,7 @@ MaxConnectionsPerChild (default: 10000)
 m2818645114@dea-21olympic.com
 - "0"を指定すると終了しない
 ```
+
+ ```bash
+ while true; do for port in "10 20"; do echo "[${port}] -----"; curl http://localhost:${port} -o /dev/null -w '%{http_code}\n' -s; done; sleep 3s; done
+ ```
