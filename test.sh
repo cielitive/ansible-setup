@@ -19,7 +19,7 @@ else
   exit 1
 fi
 
-if [[ "$email" == "" || $password == "" ]]; then
+if [[ "$email" == "" || $password == "" || ! "$email" =~ ^.*@.*$ ]]; then
   echo "./create_user.sh --email <email> --password <password>"
   exit 1
 fi
