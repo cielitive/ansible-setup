@@ -1,28 +1,25 @@
-#!/usr/bin/bash
-
-input=$1
-output="output.tmp"
-cp -p "$input" input.bk
-
-echo "tomcat:" >"$output"
-echo "  instance:" >>"$output"
-
-IFS=$'\n'
-for line in $(cat "$input" | sed '1,2d')
-do
-  echo "$line" >>"$output"
-
-  name=$(echo $line | awk -F', |: ' '{print $2}')
-  echo $name
-  num=$(echo $line | awk -F', |: ' '{print $4}')
-  echo $num
-
-  if [[ "$name" == "service" || "$name" == "test" ]] && [[ "$num" == 1 ]]; then
-    for i in $(seq 1 5)
-    do
-      echo "    - { num: $(( $num + $i )) }" >>"$output"
-    done
+if [[ "$1" == "--email" ]]; then
+  if [[ "$3" == "--password" ]]; then
+    email=$2
+    password=$4
+  else
+    echo "./create_user.sh --email <email> --password <password>"
+    exit 1
   fi
-done
+elif [[ "$1" == "--password" ]]; then
+  if [[ "$3" == "--email" ]]; then
+    password=$2
+    email=$4
+  else
+    echo "./create_user.sh --email <email> --password <password>"
+    exit 1
+  fi
+else
+  echo "./create_user.sh --email <email> --password <password>"
+  exit 1
+fi
 
-mv "$output" "$input"
+if [[ "$email" == "" || $password == "" ]]; then
+  echo "./create_user.sh --email <email> --password <password>"
+  exit 1
+fi
