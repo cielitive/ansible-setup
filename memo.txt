@@ -48,3 +48,15 @@ callback_whitelist = profile_tasks
 cp -p /mnt/BaseOS/Packages/perl-libs-5.26.3-416.el8.x86_64.rpm /tmp
 
 yum --nogpgcheck --skip-broken localinstall ./*.rpm
+
+1. ansible実行(caps)
+2. ターゲット側に実行モジュール転送(shell=command.py)
+  →これにはtaskで記載したコマンド内容が含まれます
+3. ターゲット側で記載されたコマンド実行
+  →これ対話型のコマンド
+4. (想定)対話型のコマンドに渡す文字列が足りなかったため（正: 3, 謝: 2）ctrl + cで停止
+5. ターゲット側でコマンド実行中のモジュールは対話型のコマンドが終了せずプロセスもそのまま
+
+結果、
+「playbook, role作成する人は、リターンがない可能性があるコマンド(command, shellモジュール)は気をつけよう！！」
+になっちゃう
