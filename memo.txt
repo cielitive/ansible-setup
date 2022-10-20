@@ -49,43 +49,21 @@ cp -p /mnt/BaseOS/Packages/perl-libs-5.26.3-416.el8.x86_64.rpm /tmp
 
 yum --nogpgcheck --skip-broken localinstall ./*.rpm
 
-# 文字コードをUFT-8に設定
-set fenc=utf-8
-# シンタックスハイライト有効化
-syntax enable
+### mount -o loop -t iso9660 ~/rhel-8.2-x86_64-dvd.iso /mnt
+[BaseOS-media]
+name=Red Hat Enterprise Linux 8 - BaseOS
+# metadata_expire=-1
+gpgcheck=1
+enabled=1
+baseurl=file:///mnt/BaseOS/
+# gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
 
-# バックアップファイルを作らない
-set nobackup
-# スワップファイルを作らない
-set noswapfile
-
-# 行番号の表示
-set number
-# インデント幅
-set shiftwidth=2
-# Tab文字を半角スペースにする
-set expandtab
-# Tab押下時に挿入される文字幅を指定
-set softtabstop=2
-# ファイル内にあるTab文字の表示幅
-set tabstop=2
-
-# 検索時に大文字小文字を区別しない
-set ignorecase
-# 検索文字に大文字が含まれている場合は区別する
-set smartcase
-# 検索がファイル末尾まで進んだら、ファイル先頭から再び検索
-set wrapscan
-# 検索結果をハイライト表示
-set hlsearch
-
-# 挿入モードで自動コメントアウト無効化
-# :setlocal formatoptions-=r
-autocmd FileType * setlocal formatoptions-=r
-# ノーマルモードで自動コメントアウト無効化
-# :setlocal formatoptions-=o
-autocmd FileType * setlocal formatoptions-=o
-# ペーストモード有効化(=貼り付け時のインデント崩れ防止)
-# :set noautoindent
-# :set paste
-autocmd InsertLeave * set nopaste
+[AppStream-media]
+name=Red Hat Enterprise Linux 8 - AppStream
+# metadata_expire=-1
+gpgcheck=1
+enabled=1
+baseurl=file:///mnt/AppStream/
+# gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
