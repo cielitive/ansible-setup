@@ -155,7 +155,7 @@ and are not included in this backup. You will need to restore these files manual
 > **Note**
 > リストア実行時に表示される以下のエラーメッセージは無視して問題なし
 
-[Restoring database backup using Omnibus packages outputs warnings](https://docs.gitlab.com/ee/raketasks/backup_restore.html#restoring-database-backup-using-omnibus-packages-outputs-warnings "Troubleshooting")
+[>Restoring database backup using Omnibus packages outputs warnings](https://docs.gitlab.com/ee/raketasks/backup_restore.html#restoring-database-backup-using-omnibus-packages-outputs-warnings "Troubleshooting")
 
 ```bash
 ERROR: must be owner of extension pg_trgm
