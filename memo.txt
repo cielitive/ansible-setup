@@ -67,3 +67,7 @@ enabled=1
 baseurl=file:///mnt/AppStream/
 # gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-8
+
+rpm -qa | egrep "^curl-[1-9]|^policycoreutils-[1-9]|^policycoreutils-python-utils-[1-9]|^openssh-server-[1-9]|^openssh-clients-[1-9]"
+
+EXTERNAL_URL="http://gitlab.example.com" dnf localinstall --disablerepo=* --nogpgcheck *
