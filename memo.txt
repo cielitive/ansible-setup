@@ -73,3 +73,5 @@ rpm -qa | egrep "^curl-[1-9]|^policycoreutils-[1-9]|^policycoreutils-python-util
 LANG=en_US.UTF-8
 
 EXTERNAL_URL="http://gitlab.example.com" dnf localinstall --disablerepo=* --nogpgcheck *
+
+PS1='[\[\e[1;32m\]\t\[\e[m\] \u@\h:\w]\$ '
