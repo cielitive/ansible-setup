@@ -75,3 +75,18 @@ LANG=en_US.UTF-8
 EXTERNAL_URL="http://gitlab.example.com" dnf localinstall --disablerepo=* --nogpgcheck *
 
 PS1='[\[\e[1;32m\]\t\[\e[m\] \u@\h:\w]\$ '
+
+
+    - name: ユーザ存在確認
+      shell: id {{ item.name }}
+      loop: "{{ users }}"
+      register: result
+      failed_when: no
+
+    - name: パスワード変更
+      user:
+        name: "{{ item.item.name }}"
+        password: "{{ item.item.password | password_hash('sha512', 'changed') }}"
+        state: present
+      loop: "{{ result.results }}"
+      when: item.rc == 0
