@@ -42,3 +42,7 @@ m2818645114@dea-21olympic.com
  ```bash
  while true; do for port in "10 20"; do echo "[${port}] -----"; curl http://localhost:${port} -o /dev/null -w '%{http_code}\n' -s; done; sleep 3s; done
  ```
+ 
+ 
+ 
+ tcpdump -p -nn -vvv -tttt -s0 -i any port 80
