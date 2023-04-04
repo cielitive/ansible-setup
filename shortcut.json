@@ -1,0 +1,24 @@
+// Place your key bindings in this file to override the defaults
+[
+  {
+    "key": "shift+cmd+e",
+    "command": "workbench.action.focusActiveEditorGroup"
+  },
+  {
+    "key": "shift+cmd+t",
+    "command": "workbench.action.terminal.focus"
+  },
+  {
+    "key": "cmd+enter",
+    "command": "workbench.action.terminal.focusNext"
+  },
+  {
+    "key": "shift+cmd+enter",
+    "command": "workbench.action.terminal.focusPrevious"
+  },
+  {
+    "key": "shift+cmd+h",
+    "command": "workbench.action.problems.focus",
+    "when": "terminalFocus"
+  }
+]
