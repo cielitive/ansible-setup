@@ -16,3 +16,27 @@ cp -p /tmp/rpm/*/*.rpm /tmp/source; cd /tmp/source
 rpm -ivh --test *
 rmp -ivh *
 ```
+
+```
+# rpm -Uvh https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.el7.noarch.rpm
+
+# vi /etc/yum.repos.d/zabbix.repo
+(変更前)
+[zabbix-frontend]
+name=Zabbix Official Repository frontend - $basearch
+baseurl=http://repo.zabbix.com/zabbix/5.0/rhel/7/$basearch/frontend
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-A14FE591
+
+(変更後)
+[zabbix-frontend]
+name=Zabbix Official Repository frontend - $basearch
+baseurl=http://repo.zabbix.com/zabbix/5.0/rhel/7/$basearch/frontend
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-ZABBIX-A14FE591
+
+# mkdir -p /tmp/source/zabbix
+# yum install --downloadonly --downloaddir=/tmp/source/zabbix zabbix-server-mysql zabbix-agent zabbix-get zabbix-sender zabbix-apache-conf-scl zabbix-web-mysql-scl zabbix-web-japanese
+```
