@@ -1,3 +1,4 @@
+```bash
 yum remove -y mariadb-libs
 rm -rf /var/lib/mysql
 
@@ -14,3 +15,4 @@ yum install --downloadonly --downloaddir=/tmp/rpm/perl perl-JSON
 cp -p /tmp/rpm/*/*.rpm /tmp/source; cd /tmp/source
 rpm -ivh --test *
 rmp -ivh *
+```
