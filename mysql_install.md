@@ -158,7 +158,7 @@ $ dnf module disable -y mysql
 #
 # -----
 $ mkdir -p /tmp/zabbix/mysql
-$ dnf install -y --downloadonly --downloaddir=/tmp/zabbix/mysql mysql-community-server
+$ dnf install -y --downloadonly --downloaddir=/tmp/zabbix/mysql mysql-community-server mysql-community-test pcre-devel OpenIPMI-libs nagios-plugins-fping
 $ dnf clean packages
 $ ls -1 /tmp/zabbix/mysql
 OpenIPMI-libs-2.0.31-3.el8.x86_64.rpm
