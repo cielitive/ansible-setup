@@ -279,3 +279,7 @@ $ wget https://github.com/grafana/grafana-zabbix/releases/download/v4.4.6/alexan
 $ cd /tmp; pwd
 $ tar cvf grafana_kit.tar grafana
 ```
+
+```
+vi /etc/yum/pluginconf.d/subscription-manager.conf
+```
