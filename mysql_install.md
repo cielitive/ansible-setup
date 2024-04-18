@@ -550,7 +550,338 @@ Zabbix Server Dashboardのimportを押下
 Manageから閲覧が可能になる
 ```
 
+### ElasticSearch
 
+```
+# ==========
+# 前提条件
+# ==========
+Red Hat Enterprise Linux 8.9
+Elasticsearch 8.13.2
+
+# ==========
+# 資材作成手順（資材作成用サーバ）
+# ==========
+# -----
+#
+# -----
+$ wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.13.2-linux-x86_64.tar.gz
+
+
+# ==========
+# インストール手順
+# ==========
+# -----
+# SELinux停止
+# -----
+$ sestatus
+
+### 有効だった場合は無効にする。
+$ vi /etc/selinux/config
+-----
+SELINUX=disabled
+-----
+
+### 設定変更後サーバ再起動が必要なため、再起動再度確認
+$ shutdown -r now
+$ sestatus
+
+# -----
+# Firewall停止
+# -----
+$ systemctl status firewalld
+$ systemctl is-enabled firewalld
+
+### 起動していた場合は止める。
+$ systemctl stop firewalld
+
+### 自動起動がONになっていた場合は止める
+$ systemctl disable firewalld
+
+# -----
+# ユーザ作成(作成済みの場合は飛ばす)
+# -----
+$ groupadd -g 3000 sbcc
+$ grep sbcc /etc/group
+$ useradd -g sbcc -u 3000 -d /var/lib/sbcc -s /bin/bash sbcc
+$ grep sbcc /etc/passwd
+
+### 以下のグループ、ユーザが作成されること
+sbcc:x:3000:3000::/var/lib/sbcc:/bin/bash
+
+# -----
+# ディレクトリの作成
+# -----
+$ mkdir -p /opt/elk
+$ mkdir -p /loggather/elk/elasticsearch
+$ chmod -R 777 /opt/elk
+$ chown sbcc:sbcc /opt/elk
+$ ls -ld /opt/elk
+
+# -----
+# Kit配置、展開
+# -----
+$ cd /opt/elk; pwd
+
+### WinSCPでGrafana用kitを転送する
+
+$ tar zxvf elasticsearch-8.13.2-linux-x86_64.tar.gz
+
+$ mv elasticsearch-8.13.2 elasticsearch
+
+# -----
+# ディレクトリ作成②
+# -----
+$ mkdir -p /opt/elk/elasticsearch/tmp
+$ chown -R sbcc:sbcc elasticsearch
+
+$ mkdir -p /loggather/elk/elasticsearch/data
+$ ls -ld /loggather/elk/elasticsearch/data
+
+$ cd /opt/elk/elasticsearch; pwd
+$ mv config /loggather/elk/elasticsearch
+
+$ chown -R sbcc:sbcc /loggather/elk/elasticsearch
+$ ls -l /loggather/elk/elasticsearch
+
+# -----
+#
+# -----
+$ vi /etc/systemd/system/elasticsearch.service
+
+--- [新規] ---
+[Unit]
+Description=Elasticsearch
+Documentation=https://www.elastic.co
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+#Type=notify
+#NotifyAccess=all
+RuntimeDirectory=elasticsearch
+PrivateTmp=true
+Environment=ES_HOME=/opt/elk/elasticsearch
+Environment=ES_PATH_CONF=/loggather/elk/elasticsearch/config
+Environment=ES_TMPDIR=/opt/elk/elasticsearch/tmp
+Environment=PID_DIR=/opt/elk/elasticsearch
+# Environment=ES_SD_NOTIFY=true
+# EnvironmentFile=-/etc/sysconfig/elasticsearch
+
+# WorkingDirectory=/usr/share/elasticsearch
+
+User=sbcc
+Group=sbcc
+
+ExecStart=/opt/elk/elasticsearch/bin/elasticsearch -p ${PID_DIR}/elasticsearch.pid --quiet
+
+StandardOutput=journal
+StandardError=inherit
+
+# Specifies the maximum file descriptor number that can be opened by this process
+LimitNOFILE=65535
+
+# Specifies the maximum number of processes
+LimitNPROC=4096
+
+# Specifies the maximum size of virtual memory
+LimitAS=infinity
+
+# Specifies the maximum file size
+LimitFSIZE=infinity
+
+# Disable timeout logic and wait until process is stopped
+TimeoutStopSec=0
+
+# SIGTERM signal is used to stop the Java process
+KillSignal=SIGTERM
+
+# Send the signal only to the JVM rather than its control group
+KillMode=process
+
+# Java process is never killed
+SendSIGKILL=no
+
+# When a JVM receives a SIGTERM signal it exits with code 143
+SuccessExitStatus=143
+
+# Allow a slow startup before the systemd notifier module kicks in to extend the timeout
+TimeoutStartSec=900
+
+LimitMEMLOCK=infinity
+
+[Install]
+WantedBy=multi-user.target
+
+# Built for packages-8.13.2 (packages)
+---
+
+# -----
+#
+# -----
+$ vi /loggather/elk/elasticsearch/config/elasticsearch.yml
+
+--- [修正] ---
+#path.data: /path/to/data
+↓
+path.data: /loggather/elk/elasticsearch/data
+---
+
+# -----
+#
+# -----
+$ vi /opt/elk/elasticsearch/bin/elasticsearch-env
+
+--- [修正] ---
+if [-z "$ES_ PATH_CONF" J; then ES_PATH_CONF="SES_HOE"/config; fi
+↓
+if [-z "$ES_PATH_CONF" ]; then ES_PATH_CONF=/loggather/elk/elasticsearch/config; fi
+---
+
+# -----
+#
+# -----
+$ vi /loggather/elk/elasticsearch/config/jvm.options
+
+--- [修正] ---
+## -Xms4g
+## -Xmx4g
+↓
+-Xms256m
+-Xmx256m
+---
+
+# -----
+# カーネルパラメータ修正
+# -----
+$ sysctl -w vm.max_map_count=262144
+
+# -----
+#
+# -----
+$ systemctl daemon-reload
+$ systemctl start elasticsearch
+$ systemctl status elasticsearch
+
+$ systemctl enable elasticsearch
+$ systemctl is-enabled elasticsearch
+
+# -----
+# Kit削除
+# -----
+$ cd /opt/elk; pwd
+$ rm -i elasticsearch-8.13.2-linux-x86_64.tar.gz
+
+# -----
+# パスワード変更
+# -----
+$ /opt/elk/elasticsearch/bin/elasticsearch-reset-password -u elastic -i --url https://192.168.3.94:9200
+This tool will reset the password of the [elastic] user.
+You will be prompted to enter the password.
+Please confirm that you would like to continue [y/N]y
+
+
+Enter password for [elastic]:
+Re-enter password for [elastic]:
+Password for the [elastic] user successfully reset.
+
+$ /opt/elk/elasticsearch/bin/elasticsearch-reset-password -u kibana -i --url https://192.168.3.94:9200
+This tool will reset the password of the [kibana] user.
+You will be prompted to enter the password.
+Please confirm that you would like to continue [y/N]y
+
+
+Enter password for [kibana]:
+Re-enter password for [kibana]:
+Password for the [kibana] user successfully reset.
+
+# -----
+# 動作確認
+# -----
+$ curl -k --cacert /loggather/elk/elasticsearch/config/certs/http.p12 -u elastic https://localhost:9200
+Enter host password for user 'elastic':
+{
+  "name" : "node01",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "tgBNY4b1RpSUDFwerMjtpw",
+  "version" : {
+    "number" : "8.13.2",
+    "build_flavor" : "default",
+    "build_type" : "tar",
+    "build_hash" : "16cc90cd2d08a3147ce02b07e50894bc060a4cbf",
+    "build_date" : "2024-04-05T14:45:26.420424304Z",
+    "build_snapshot" : false,
+    "lucene_version" : "9.10.0",
+    "minimum_wire_compatibility_version" : "7.17.0",
+    "minimum_index_compatibility_version" : "7.0.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+# -----
+#
+# -----
+$ vi /loggather/elk/elasticsearch/config/elasticsearch.yml
+
+--- [修正] ---
+xpack.security.enabled: true
+↓
+xpack.security.enabled: false
+---
+
+--- [修正] ---
+xpack.security.http.ssl:
+  enabled: true
+  keystore.path: certs/http.p12
+↓
+xpack.security.http.ssl:
+  enabled: false
+  keystore.path: certs/http.p12
+---
+
+--- [修正] ---
+xpack.security.transport.ssl:
+  enabled: true
+  verification_mode: certificate
+  keystore.path: certs/transport.p12
+  truststore.path: certs/transport.p12
+↓
+xpack.security.transport.ssl:
+  enabled: false
+  verification_mode: certificate
+  keystore.path: certs/transport.p12
+  truststore.path: certs/transport.p12
+---
+
+# -----
+#
+# -----
+$ systemctl restart elasticsearch
+$ systemctl status elasticsearch
+
+# -----
+# 動作確認
+# -----
+$ curl -u elastic http://localhost:9200
+Enter host password for user 'elastic':
+{
+  "name" : "node01",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "pg2B4WSEQJu-r-4UdkDeQg",
+  "version" : {
+    "number" : "8.13.2",
+    "build_flavor" : "default",
+    "build_type" : "tar",
+    "build_hash" : "16cc90cd2d08a3147ce02b07e50894bc060a4cbf",
+    "build_date" : "2024-04-05T14:45:26.420424304Z",
+    "build_snapshot" : false,
+    "lucene_version" : "9.10.0",
+    "minimum_wire_compatibility_version" : "7.17.0",
+    "minimum_index_compatibility_version" : "7.0.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
 
 
 
