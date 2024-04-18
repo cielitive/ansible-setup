@@ -883,6 +883,348 @@ Enter host password for user 'elastic':
 }
 ```
 
+### kibana
+
+```
+# ==========
+# 前提条件
+# ==========
+Red Hat Enterprise Linux 8.9
+Elasticsearch 8.13.2
+kibana
+
+# ==========
+# 資材作成手順（資材作成用サーバ）
+# ==========
+# -----
+#
+# -----
+$ wget https://artifacts.elastic.co/downloads/kibana/kibana-8.13.2-linux-x86_64.tar.gz
+
+
+# ==========
+# インストール手順
+# ==========
+# -----
+# Kit配置、展開
+# -----
+$ cd /opt/elk; pwd
+
+### WinSCPでGrafana用kitを転送する
+
+$ tar zxvf kibana-8.13.2-linux-x86_64.tar.gz
+
+$ mv kibana-8.13.2 kibana
+$ chown -R sbcc:sbcc kibana
+
+# -----
+# ディレクトリの作成
+# -----
+$ mkdir /loggather/elk/kibana
+
+$ cd /opt/elk/kibana; pwd
+$ mv data /loggather/elk/kibana
+$ mv config /loggather/elk/kibana
+
+$ cd /loggather/elk/; pwd
+$ chown -R sbcc:sbcc kibana
+$ ls -l /loggather/elk/kibana
+
+# -----
+# 設定ファイルの編集
+# -----
+$ vi /loggather/elk/kibana/config/kibana.yml
+
+--- [修正] ---
+#server.host: "localhost"
+↓
+server.host: "0.0.0.0"
+---
+
+--- [修正] ---
+#elasticsearch.username: "kibana_system"
+#elasticsearch.password: "pass"
+↓
+elasticsearch.username: "kibana"
+elasticsearch.password： "<elasticsearchのパスワード設定時に登録したパスワード>"
+---
+
+--- [修正] ---
+#path.data: data
+↓
+path.data: /loggather/elk/kibana/data
+---
+
+--- [追記] ---
+logging:
+  appenders:
+    file:
+      type: file
+      fileName: /opt/elk/kibana/logs/kibana.log
+      layout:
+        type: json
+  root:
+    appenders:
+      - default
+      - file
+---
+
+# -----
+# 設定ファイルの編集
+# -----
+$ vi /etc/systemd/system/kibana.service
+
+--- [新規] ---
+[Unit]
+Description=Kibana
+Documentation=https://www.elastic.co
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=sbcc
+Group=sbcc
+# PrivateTmp=true
+
+Environment=KBN_HOME=/opt/elk/kibana
+Environment=KBN_PATH_CONF=/loggather/elk/kibana/config
+
+# EnvironmentFile=-/etc/default/kibana
+# EnvironmentFile=-/etc/sysconfig/kibana
+
+ExecStart=/opt/elk/kibana/bin/kibana -c /loggather/elk/kibana/config/kibana.yml -l /opt/elk/kibana/logs
+
+Restart=always
+RestartSec=3
+
+StartLimitBurst=3
+StartLimitInterval=60
+
+# WorkingDirectory=/usr/share/kibana
+
+StandardOutput=journal
+StandardError=inherit
+
+[Install]
+WantedBy=multi-user.target
+---
+
+# -----
+#
+# -----
+$ cd /loggather/elk/elasticsearch/config/certs; pwd
+$ openssl pkcs12 -in http.p12 -out elastic-stack-cacert.pem
+
+# -----
+#
+# -----
+$ systemctl daemon-reload
+$ systemctl start kibana
+$ systemctl status kibana
+
+$ systemctl enable kibana
+$ systemctl is-enabled kibana
+
+# -----
+# 動作確認
+# -----
+$ curl -u 'elastic:Adm1n0!!' -IL http://127.0.0.1:5601
+
+# -----
+# Kit削除
+# -----
+$ cd / opt/elk; pwd
+$ rm kibana-8.13.2-linux-x86_64.tar.gz
+```
+
+```
+# For more configuration options see the configuration guide for Kibana in
+# https://www.elastic.co/guide/index.html
+
+# =================== System: Kibana Server ===================
+# Kibana is served by a back end server. This setting specifies the port to use.
+#server.port: 5601ƒrun
+
+
+# Specifies the address to which the Kibana server will bind. IP addresses and host names are both valid values.
+# The default is 'localhost', which usually means remote machines will not be able to connect.
+# To allow connections from remote users, set this parameter to a non-loopback address.
+server.host: "0.0.0.0"
+
+# Enables you to specify a path to mount Kibana at if you are running behind a proxy.
+# Use the `server.rewriteBasePath` setting to tell Kibana if it should remove the basePath
+# from requests it receives, and to prevent a deprecation warning at startup.
+# This setting cannot end in a slash.
+#server.basePath: ""
+
+# Specifies whether Kibana should rewrite requests that are prefixed with
+# `server.basePath` or require that they are rewritten by your reverse proxy.
+# Defaults to `false`.
+#server.rewriteBasePath: false
+
+# Specifies the public URL at which Kibana is available for end users. If
+# `server.basePath` is configured this URL should end with the same basePath.
+#server.publicBaseUrl: ""
+
+# The maximum payload size in bytes for incoming server requests.
+#server.maxPayload: 1048576
+
+# The Kibana server's name. This is used for display purposes.
+#server.name: "your-hostname"
+
+# =================== System: Kibana Server (Optional) ===================
+# Enables SSL and paths to the PEM-format SSL certificate and SSL key files, respectively.
+# These settings enable SSL for outgoing requests from the Kibana server to the browser.
+#server.ssl.enabled: false
+#server.ssl.certificate: /path/to/your/server.crt
+#server.ssl.key: /path/to/your/server.key
+
+# =================== System: Elasticsearch ===================
+# The URLs of the Elasticsearch instances to use for all your queries.
+#elasticsearch.hosts: ["http://localhost:9200"]
+
+# If your Elasticsearch is protected with basic authentication, these settings provide
+# the username and password that the Kibana server uses to perform maintenance on the Kibana
+# index at startup. Your Kibana users still need to authenticate with Elasticsearch, which
+# is proxied through the Kibana server.
+elasticsearch.username: "kibana"
+elasticsearch.password: "kibana0"
+
+# Kibana can also authenticate to Elasticsearch via "service account tokens".
+# Service account tokens are Bearer style tokens that replace the traditional username/password based configuration.
+# Use this token instead of a username/password.
+# elasticsearch.serviceAccountToken: "my_token"
+
+# Time in milliseconds to wait for Elasticsearch to respond to pings. Defaults to the value of
+# the elasticsearch.requestTimeout setting.
+#elasticsearch.pingTimeout: 1500
+
+# Time in milliseconds to wait for responses from the back end or Elasticsearch. This value
+# must be a positive integer.
+#elasticsearch.requestTimeout: 30000
+
+# The maximum number of sockets that can be used for communications with elasticsearch.
+# Defaults to `Infinity`.
+#elasticsearch.maxSockets: 1024
+
+# Specifies whether Kibana should use compression for communications with elasticsearch
+# Defaults to `false`.
+#elasticsearch.compression: false
+
+# List of Kibana client-side headers to send to Elasticsearch. To send *no* client-side
+# headers, set this value to [] (an empty list).
+#elasticsearch.requestHeadersWhitelist: [ authorization ]
+
+# Header names and values that are sent to Elasticsearch. Any custom headers cannot be overwritten
+# by client-side headers, regardless of the elasticsearch.requestHeadersWhitelist configuration.
+#elasticsearch.customHeaders: {}
+
+# Time in milliseconds for Elasticsearch to wait for responses from shards. Set to 0 to disable.
+#elasticsearch.shardTimeout: 30000
+
+# =================== System: Elasticsearch (Optional) ===================
+# These files are used to verify the identity of Kibana to Elasticsearch and are required when
+# xpack.security.http.ssl.client_authentication in Elasticsearch is set to required.
+#elasticsearch.ssl.certificate: /path/to/your/client.crt
+#elasticsearch.ssl.key: /path/to/your/client.key
+
+# Enables you to specify a path to the PEM file for the certificate
+# authority for your Elasticsearch instance.
+#elasticsearch.ssl.certificateAuthorities: [ "/path/to/your/CA.pem" ]
+
+# To disregard the validity of SSL certificates, change this setting's value to 'none'.
+#elasticsearch.ssl.verificationMode: full
+
+# =================== System: Logging ===================
+# Set the value of this setting to off to suppress all logging output, or to debug to log everything. Defaults to 'info'
+#logging.root.level: debug
+
+# Enables you to specify a file where Kibana stores log output.
+logging:
+  appenders:
+    file:
+      type: file
+      fileName: /opt/elk/kibana/logs/kibana.log
+      layout:
+        type: json
+  root:
+    appenders:
+      - default
+      - file
+#  policy:
+#    type: size-limit
+#    size: 256mb
+#  strategy:
+#    type: numeric
+#    max: 10
+#  layout:
+#    type: json
+
+# Logs queries sent to Elasticsearch.
+#logging.loggers:
+#  - name: elasticsearch.query
+#    level: debug
+
+# Logs http responses.
+#logging.loggers:
+#  - name: http.server.response
+#    level: debug
+
+# Logs system usage information.
+#logging.loggers:
+#  - name: metrics.ops
+#    level: debug
+
+# Enables debug logging on the browser (dev console)
+#logging.browser.root:
+#  level: debug
+
+# =================== System: Other ===================
+# The path where Kibana stores persistent data not saved in Elasticsearch. Defaults to data
+path.data: /loggather/elk/kibana/data
+
+# Specifies the path where Kibana creates the process ID file.
+pid.file: /run/kibana/kibana.pid
+
+# Set the interval in milliseconds to sample system and process performance
+# metrics. Minimum is 100ms. Defaults to 5000ms.
+#ops.interval: 5000
+
+# Specifies locale to be used for all localizable strings, dates and number formats.
+# Supported languages are the following: English (default) "en", Chinese "zh-CN", Japanese "ja-JP", French "fr-FR".
+#i18n.locale: "en"
+
+# =================== Frequently used (Optional)===================
+
+# =================== Saved Objects: Migrations ===================
+# Saved object migrations run at startup. If you run into migration-related issues, you might need to adjust these settings.
+
+# The number of documents migrated at a time.
+# If Kibana can't start up or upgrade due to an Elasticsearch `circuit_breaking_exception`,
+# use a smaller batchSize value to reduce the memory pressure. Defaults to 1000 objects per batch.
+#migrations.batchSize: 1000
+
+# The maximum payload size for indexing batches of upgraded saved objects.
+# To avoid migrations failing due to a 413 Request Entity Too Large response from Elasticsearch.
+# This value should be lower than or equal to your Elasticsearch cluster’s `http.max_content_length`
+# configuration option. Default: 100mb
+#migrations.maxBatchSizeBytes: 100mb
+
+# The number of times to retry temporary migration failures. Increase the setting
+# if migrations fail frequently with a message such as `Unable to complete the [...] step after
+# 15 attempts, terminating`. Defaults to 15
+#migrations.retryAttempts: 15
+
+# =================== Search Autocomplete ===================
+# Time in milliseconds to wait for autocomplete suggestions from Elasticsearch.
+# This value must be a whole number greater than zero. Defaults to 1000ms
+#unifiedSearch.autocomplete.valueSuggestions.timeout: 1000
+
+# Maximum number of documents loaded by each shard to generate autocomplete suggestions.
+# This value must be a whole number greater than zero. Defaults to 100_000
+#unifiedSearch.autocomplete.valueSuggestions.terminateAfter: 100000
+```
 
 
 
