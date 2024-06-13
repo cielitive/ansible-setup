@@ -1,4 +1,4 @@
-```bash
+no```bash
 # ==========
 # インストール用資材を準備する（資材ダウンロード用の仮想マシンで実施）
 # ==========
@@ -1228,6 +1228,10 @@ pid.file: /run/kibana/kibana.pid
 
 ```
 kube_pod_status_phase{phase=~"Pending|Unknown|Failed", pod="your-pod-name", namespace="your-namespace"}
+```
+
+```
+absent(kube_pod_status_phase{phase="Running", namespace="your-namespace", pod=~"your-pod-name.*"})
 ```
 
 
