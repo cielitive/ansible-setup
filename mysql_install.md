@@ -1,4 +1,4 @@
-no```bash
+```bash
 # ==========
 # インストール用資材を準備する（資材ダウンロード用の仮想マシンで実施）
 # ==========
@@ -1234,5 +1234,7 @@ kube_pod_status_phase{phase=~"Pending|Unknown|Failed", pod="your-pod-name", name
 absent(kube_pod_status_phase{phase="Running", namespace="your-namespace", pod=~"your-pod-name.*"})
 ```
 
-
+```
+absent(kube_pod_container_status_running{namespace="your-namespace", pod="your-pod-name", container="your-container-name"}) == 1
+```
 
