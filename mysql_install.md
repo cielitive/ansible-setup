@@ -1226,9 +1226,9 @@ pid.file: /run/kibana/kibana.pid
 #unifiedSearch.autocomplete.valueSuggestions.terminateAfter: 100000
 ```
 
-
-
-
+```
+kube_pod_status_phase{phase=~"Pending|Unknown|Failed", pod="your-pod-name", namespace="your-namespace"}
+```
 
 
 
