@@ -1242,6 +1242,12 @@ absent(kube_pod_container_status_running{namespace="your-namespace", pod="your-p
 kube_persistentvolume_status_phase{persistentvolume="your-pv-name", phase="Failed"} == 1
 ```
 
+```
+job 死活監視
+kube_job_status_failed{namespace="your-namespace", job_name="your-job-name"} > 0
+
+increase(kube_job_status_succeeded{namespace="your-namespace", job_name="your-job-name"}[1h]) == 0
+```
 
 
 
