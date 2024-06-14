@@ -1238,3 +1238,23 @@ absent(kube_pod_status_phase{phase="Running", namespace="your-namespace", pod=~"
 absent(kube_pod_container_status_running{namespace="your-namespace", pod="your-pod-name", container="your-container-name"}) == 1
 ```
 
+```
+kube_persistentvolume_status_phase{persistentvolume="your-pv-name", phase="Failed"} == 1
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
