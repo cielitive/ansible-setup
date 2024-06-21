@@ -1,0 +1,655 @@
+# ==========
+# 【参考】環境情報
+# ==========
+example.com:
+  network:
+    local: 192.168.9.0/24
+    Cluster: 10.0.0.0/16
+  host:
+    - "k8s-master":
+        os: rockylinux-9
+        IP:
+          eth1: 192.168.3.xxx
+          eth2: 192.168.9.20
+          eth3: -
+        DNS: -
+        GW: 10.0.2.2
+    - "k8s-node01":
+        OS: rockylinux-9
+        IP:
+          eth1: 192.168.3.xxx
+          eth2: 192.168.9.21
+          eth3: -
+        DNS: -
+        GW: 10.0.2.2
+    - "k8s-node02":
+        OS: rockylinux-9
+        IP:
+          eth1: 192.168.3.xxx
+          eth2: 192.168.9.22
+          eth3: -
+        DNS: -
+        GW: 10.0.2.2
+
+Kubernetes:
+  Version: 1.30.0
+Docker:
+  Engine:
+    Version: 26.1.4
+  containerd:
+    Version: 1.6.33
+  runc:
+    Version: 1.1.12
+CNI:
+  Calico:
+    Version: 3.28.0
+
+Prometeus:
+  Version: 
+
+Grafana:
+  Version: 
+
+# ==========
+# 事前準備( ControlePlane, WokerNode )
+# ==========
+# -----
+# ユーザ作成
+# -----
+
+# -----
+# "hosts"に追加する
+# -----
+$ sudo sed -i '/^127.0.1.1/d' /etc/hosts
+$ sudo cat <<EOT >>/etc/hosts
+# kubernetes node list
+192.168.9.20   k8s-master.example.com k8s-master
+192.168.9.21   k8s-node01.example.com k8s-node01
+192.168.9.22   k8s-node02.example.com k8s-node02
+EOT
+
+# -----
+# Firewalld無効化
+# -----
+$ sudo systemctl disable --now firewalld
+$ sudo systemctl is-active firewalld
+inactive
+$ sudo systemctl is-enabled firewalld
+disabled
+
+# -----
+# SELinux無効化
+# -----
+$ sudo setenforce 0
+$ sudo sed -i -E 's/^SELINUX=(enforcing|permissive)$/SELINUX=disabled/' /etc/selinux/config
+$ grep "^SELINUX=" /etc/selinux/config
+SELINUX=disabled
+
+$ sestatus
+SELinux status:                 enabled
+SELinuxfs mount:                /sys/fs/selinux
+SELinux root directory:         /etc/selinux
+Loaded policy name:             targeted
+Current mode:                   permissive
+Mode from config file:          disabled
+Policy MLS status:              enabled
+Policy deny_unknown status:     allowed
+Memory protection checking:     actual (secure)
+Max kernel policy version:      33
+
+# -----
+# swap無効化
+# -----
+$ sudo swapoff -a
+$ sudo sed -i -e '/swap/s/^/# /g' /etc/fstab
+
+### swapが無効化されていることを確認する(→なにも表示されないこと)
+$ sudo swapon -s
+
+# -----
+# [参考]"UUID"を確認する
+# -----
+$ dmidecode -s system-uuid
+3A164042-9096-4421-AF53-4DB78638690A
+
+# -----
+# 前提パッケージ
+# -----
+$ dnf install -y iproute-tc chrony
+$ rpm -qa | egrep "iproute-tc|chrony"
+chrony-4.3-1.el9.aarch64
+iproute-tc-6.2.0-5.el9.aarch64
+
+# -----
+# カーネルモジュール有効化
+# -----
+$ sudo modprobe overlay
+$ sudo modprobe br_netfilter
+
+### 永続化
+$ cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+overlay
+br_netfilter
+EOF
+
+$ lsmod | egrep "overlay|br_netfilter"
+br_netfilter           32768  0
+bridge                290816  1 br_netfilter
+overlay               151552  0
+
+# -----
+# カーネルパラメータ修正
+# -----
+$ cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.ipv4.ip_forward = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+EOF
+
+$ sudo sysctl --system
+$ sudo sysctl net.ipv4.ip_forward net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables
+net.ipv4.ip_forward = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+
+
+# ==========
+# Docker
+# ==========
+# -----
+# リポジトリを追加する
+# -----
+$ sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
+
+# -----
+# "Docker"をインストールする
+# -----
+$ sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+$ rpm -qa | grep -E "docker-ce|docker-ce-cli|containerd.io"
+containerd.io-1.6.33-3.1.el9.aarch64
+docker-ce-cli-26.1.4-1.el9.aarch64
+docker-ce-rootless-extras-26.1.4-1.el9.aarch64
+docker-ce-26.1.4-1.el9.aarch64
+
+# -----
+# "Docker"を起動する
+# -----
+$ systemctl --now enable docker.service
+$ systemctl is-active docker.service
+active
+$ systemctl is-enabled docker.service
+enabled
+
+# -----
+# バージョンを確認する
+# -----
+$ docker version
+Client: Docker Engine - Community
+ Version:           26.1.4
+ API version:       1.45
+ Go version:        go1.21.11
+ Git commit:        5650f9b
+ Built:             Wed Jun  5 11:30:27 2024
+ OS/Arch:           linux/arm64
+ Context:           default
+
+Server: Docker Engine - Community
+ Engine:
+  Version:          26.1.4
+  API version:      1.45 (minimum version 1.24)
+  Go version:       go1.21.11
+  Git commit:       de5c9cf
+  Built:            Wed Jun  5 11:29:15 2024
+  OS/Arch:          linux/arm64
+  Experimental:     false
+ containerd:
+  Version:          1.6.33
+  GitCommit:        d2d58213f83a351ca8f528a95fbd145f5654e957
+ runc:
+  Version:          1.1.12
+  GitCommit:        v1.1.12-0-g51d5e94
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+
+# -----
+# [参考]ストレージ・ドライバ確認
+# -----
+$ docker info
+Client: Docker Engine - Community
+ Version:    26.1.4
+ Context:    default
+ Debug Mode: false
+ Plugins:
+  buildx: Docker Buildx (Docker Inc.)
+    Version:  v0.14.1
+    Path:     /usr/libexec/docker/cli-plugins/docker-buildx
+  compose: Docker Compose (Docker Inc.)
+    Version:  v2.27.1
+    Path:     /usr/libexec/docker/cli-plugins/docker-compose
+
+Server:
+ Containers: 0
+  Running: 0
+  Paused: 0
+  Stopped: 0
+ Images: 0
+ Server Version: 26.1.4
+ Storage Driver: overlay2
+  Backing Filesystem: xfs
+  Supports d_type: true
+  Using metacopy: false
+  Native Overlay Diff: true
+  userxattr: false
+ Logging Driver: json-file
+ Cgroup Driver: systemd
+ Cgroup Version: 2
+ Plugins:
+  Volume: local
+  Network: bridge host ipvlan macvlan null overlay
+  Log: awslogs fluentd gcplogs gelf journald json-file local splunk syslog
+ Swarm: inactive
+ Runtimes: io.containerd.runc.v2 runc
+ Default Runtime: runc
+ Init Binary: docker-init
+ containerd version: d2d58213f83a351ca8f528a95fbd145f5654e957
+ runc version: v1.1.12-0-g51d5e94
+ init version: de40ad0
+ Security Options:
+  seccomp
+   Profile: builtin
+  cgroupns
+ Kernel Version: 5.14.0-362.18.1.el9_3.aarch64
+ Operating System: Rocky Linux 9.3 (Blue Onyx)
+ OSType: linux
+ Architecture: aarch64
+ CPUs: 2
+ Total Memory: 3.502GiB
+ Name: k8s-master.example.com
+ ID: f8170aa4-406c-45a2-9686-5e0aff01ec74
+ Docker Root Dir: /var/lib/docker
+ Debug Mode: false
+ Experimental: false
+ Insecure Registries:
+  127.0.0.0/8
+ Live Restore Enabled: false
+
+# -----
+# コンテナランタイムの設定修正(Cgroup Driver)
+# -----
+$ cp -p /etc/containerd/config.toml /etc/containerd/config.toml_$(date +%Y%m%d)
+$ containerd config default >/etc/containerd/config.toml
+$ sed -i '/SystemdCgroup/s/false/true/' /etc/containerd/config.toml
+$ grep "SystemdCgroup" /etc/containerd/config.toml
+            SystemdCgroup = true
+
+$ systemctl restart containerd.service docker.service
+
+# -----
+# [参考]Proxy設定
+# -----
+$ mkdir -p /etc/systemd/system/docker.service.d
+$ cat > /etc/systemd/system/docker.service.d/http-proxy.conf <<EOT
+[Service]
+Environment="HTTP_PROXY=http://proxy.example.com:80/"
+EOT
+
+$ cat > /etc/systemd/system/docker.service.d/https-proxy.conf <<EOT
+[Service]
+Environment="HTTPS_PROXY=https://proxy.example.com:443/"
+EOT
+
+
+# ==========
+# Kubernetes
+# ==========
+# -----
+# リポジトリを追加する
+# -----
+$ cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.30/rpm/repodata/repomd.xml.key
+exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+EOF
+
+# -----
+# "Kubernetes"をインストールする( ControlePlane )
+# -----
+$ sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+
+# -----
+# "Kubernetes"をインストールする ( WokerNode )
+# -----
+$ sudo yum install -y kubelet --disableexcludes=kubernetes
+
+# -----
+# "Cgroup Driver"を変更する( ControlePlane )
+# -----
+$ kubeadm config print init-defaults | tee ClusterConfiguration.yaml
+
+# -----
+#  ( ControlePlane )
+# -----
+$ kubeadm config print join-defaults | tee JoinConfiguration.yaml
+
+# -----
+# ( ControlePlane )
+# -----
+$ kubeadm init --config=ClusterConfiguration.yaml
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 192.168.9.20:6443 --token abcdef.0123456789abcdef \
+        --discovery-token-ca-cert-hash sha256:554f1d1c056768a8e00045dea92c0fe1d0b7680de9bc92f5ded89e3f5775358a 
+
+# -----
+# [参考]ハッシュ値(sha256)の再表示
+# -----
+$ openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+
+# -----
+# ( ControlePlane )
+# -----
+$ mkdir -p $HOME/.kube
+$ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+$ sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+# -----
+# バージョンを確認する( ControlePlane )
+# -----
+$ kubectl version
+Client Version: v1.30.2
+Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
+Server Version: v1.30.0
+
+# -----
+# Workerノード登録( ControlePlane )
+# -----
+$ kubectl describe node k8s-master
+Name:               k8s-master
+Roles:              control-plane
+Labels:             beta.kubernetes.io/arch=arm64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=arm64
+                    kubernetes.io/hostname=k8s-master
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/control-plane=
+                    node.kubernetes.io/exclude-from-external-load-balancers=
+Annotations:        kubeadm.alpha.kubernetes.io/cri-socket: unix:///var/run/containerd/containerd.sock
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Sun, 16 Jun 2024 20:19:43 -0500
+Taints:             node-role.kubernetes.io/control-plane:NoSchedule
+                    node.kubernetes.io/not-ready:NoSchedule
+
+$ kubectl taint nodes k8s-master node-role.kubernetes.io/control-plane:NoSchedule-
+node/k8s-master untainted
+
+$ kubectl describe node k8s-master
+Name:               k8s-master
+Roles:              control-plane
+Labels:             beta.kubernetes.io/arch=arm64
+                    beta.kubernetes.io/os=linux
+                    kubernetes.io/arch=arm64
+                    kubernetes.io/hostname=k8s-master
+                    kubernetes.io/os=linux
+                    node-role.kubernetes.io/control-plane=
+                    node.kubernetes.io/exclude-from-external-load-balancers=
+Annotations:        kubeadm.alpha.kubernetes.io/cri-socket: unix:///var/run/containerd/containerd.sock
+                    node.alpha.kubernetes.io/ttl: 0
+                    volumes.kubernetes.io/controller-managed-attach-detach: true
+CreationTimestamp:  Sun, 16 Jun 2024 20:19:43 -0500
+Taints:             node.kubernetes.io/not-ready:NoSchedule
+
+# -----
+# Workerノード登録( WokerNode )
+# -----
+$ kubeadm join 192.168.9.20:6443 --token abcdef.0123456789abcdef \
+        --discovery-token-ca-cert-hash sha256:9af7b7851154599f2bfc7e6e4aad91ece943e586ebdd6d45bc8c42b49869ccd7 
+
+# -----
+# [参考]
+# -----
+$ cat > /var/lib/kubelet/bootstrap-kubeconfig <<EOT
+apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority: /var/lib/kubernetes/ca.pem
+    server: https://192.168.3.55:6443
+  name: bootstrap
+contexts:
+- context:
+    cluster: bootstrap
+    user: kubelet-bootstrap
+  name: bootstrap
+current-context: bootstrap
+kind: Config
+preferences: {}
+users:
+- name: kubelet-bootstrap
+  user:
+    token: 07401b.f395accd246ae52d
+EOT
+
+# ==========
+# Flannel ( ControlePlane, WokerNode )
+# ==========
+# -----
+#
+# -----
+
+# ==========
+# Calico ( ControlePlane, WokerNode )
+# ==========
+# -----
+#
+# -----
+$ kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
+
+# -----
+#
+# -----
+$ mkdir ~/calico && cd $_
+$ wget https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
+$ vim custom-resources.yaml
+-----
+spec:
+  # Configures Calico networking.
+  calicoNetwork:
+    ipPools:
+    - name: default-ipv4-ippool
+      blockSize: 26
+      cidr: 10.0.0.0/16
+
+$ kubectl create -f custom-resources.yaml
+installation.operator.tigera.io/default created
+apiserver.operator.tigera.io/default created
+
+# -----
+#
+# -----
+$ kubectl get namespace --all-namespaces
+NAME               STATUS   AGE
+calico-apiserver   Active   2m44s
+calico-system      Active   3m47s
+default            Active   21m
+kube-node-lease    Active   21m
+kube-public        Active   21m
+kube-system        Active   21m
+tigera-operator    Active   5m19s
+
+# -----
+#
+# -----
+$ kubectl get node --all-namespaces
+NAME         STATUS   ROLES           AGE   VERSION
+k8s-master   Ready    control-plane   22m   v1.30.2
+
+$ kubectl get nodes -o wide
+NAME         STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                      KERNEL-VERSION                  CONTAINER-RUNTIME
+k8s-master   Ready    control-plane   18m   v1.30.2   192.168.9.20   <none>        Rocky Linux 9.3 (Blue Onyx)   5.14.0-362.18.1.el9_3.aarch64   containerd://1.6.33
+
+# -----
+#
+# -----
+$ kubectl get pod --all-namespaces
+NAMESPACE          NAME                                      READY   STATUS    RESTARTS   AGE
+calico-apiserver   calico-apiserver-85658c95f8-qvmjn         1/1     Running   0          3m42s
+calico-apiserver   calico-apiserver-85658c95f8-z8dbv         1/1     Running   0          3m42s
+calico-system      calico-kube-controllers-b566bbb67-v45qw   1/1     Running   0          4m45s
+calico-system      calico-node-qjdqd                         1/1     Running   0          4m45s
+calico-system      calico-typha-7cbc7d4d58-4qbvm             1/1     Running   0          4m45s
+calico-system      csi-node-driver-4g47q                     2/2     Running   0          4m45s
+kube-system        coredns-7db6d8ff4d-8pbmf                  1/1     Running   0          21m
+kube-system        coredns-7db6d8ff4d-kghzf                  1/1     Running   0          21m
+kube-system        etcd-k8s-master                           1/1     Running   0          22m
+kube-system        kube-apiserver-k8s-master                 1/1     Running   0          22m
+kube-system        kube-controller-manager-k8s-master        1/1     Running   0          22m
+kube-system        kube-proxy-mdvvf                          1/1     Running   0          21m
+kube-system        kube-scheduler-k8s-master                 1/1     Running   0          22m
+tigera-operator    tigera-operator-76ff79f7fd-4vrjf          1/1     Running   0          6m16s
+
+# -----
+#
+# -----
+$ kubectl get service --all-namespaces
+NAMESPACE          NAME                              TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                  AGE
+calico-apiserver   calico-api                        ClusterIP   10.96.172.216    <none>        443/TCP                  4m12s
+calico-system      calico-kube-controllers-metrics   ClusterIP   None             <none>        9094/TCP                 4m19s
+calico-system      calico-typha                      ClusterIP   10.106.186.168   <none>        5473/TCP                 5m15s
+default            kubernetes                        ClusterIP   10.96.0.1        <none>        443/TCP                  22m
+kube-system        kube-dns                          ClusterIP   10.96.0.10       <none>        53/UDP,53/TCP,9153/TCP   22m
+
+# -----
+#
+# -----
+$ kubectl get daemonset --all-namespaces
+NAMESPACE       NAME              DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR            AGE
+calico-system   calico-node       1         1         1       1            1           kubernetes.io/os=linux   5m41s
+calico-system   csi-node-driver   1         1         1       1            1           kubernetes.io/os=linux   5m41s
+kube-system     kube-proxy        1         1         1       1            1           kubernetes.io/os=linux   23m
+
+
+# ==========
+# サンプルアプリケーション
+# ==========
+# -----
+#
+# -----
+$ cat <<EOT | sudo tee nginx.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+EOT
+
+# -----
+#
+# -----
+$ kubectl create -f nginx.yaml
+deployment "nginx-deployment" created
+
+# -----
+#
+# -----
+$ kubectl get deployments
+NAME               READY   UP-TO-DATE   AVAILABLE   AGE
+nginx-deployment   2/2     2            2           12s
+
+# -----
+#
+# -----
+$ kubectl get replicasets
+NAME                          DESIRED   CURRENT   READY   AGE
+nginx-deployment-77d8468669   2         2         2       29s
+
+# -----
+#
+# -----
+# kubectl get pods
+NAME                                READY   STATUS    RESTARTS   AGE
+nginx-deployment-77d8468669-gwnhk   1/1     Running   0          41s
+nginx-deployment-77d8468669-h8vgl   1/1     Running   0          41s
+
+# -----
+#
+# -----
+# kubectl describe pods nginx-deployment
+
+# -----
+#
+# -----
+$ kubectl expose deployment nginx-deployment --type=NodePort --name=nginx-service --port=80 --target-port=80
+service/nginx-service exposed
+
+# -----
+#
+# -----
+$ kubectl get service
+NAME            TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+kubernetes      ClusterIP   10.96.0.1        <none>        443/TCP        15h
+nginx-service   NodePort    10.100.104.214   <none>        80:31116/TCP   9s
+
+# -----
+#
+# -----
+$ kubectl describe services nginx-service
+
+# -----
+#
+# -----
+$ curl $(kubectl get service | grep nginx-service | awk '{print $3}')
+
+# -----
+# [参考]Service削除
+# -----
+# kubectl delete service nginx-service
+
+# -----
+# [参考]deployment削除
+# -----
+# kubectl delete deployment nginx-deployment
+
+
+# -----
+#
+# -----
+
+
+kubectl taint nodes k8s-master node-role.kubernetes.io/master:NoSchedule-
