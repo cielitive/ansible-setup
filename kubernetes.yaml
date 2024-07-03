@@ -646,10 +646,18 @@ $ curl $(kubectl get service | grep nginx-service | awk '{print $3}')
 # -----
 # kubectl delete deployment nginx-deployment
 
-
+# ==========
+# Prometheus
+# ==========
 # -----
 #
 # -----
-
-
-kubectl taint nodes k8s-master node-role.kubernetes.io/master:NoSchedule-
+$ dnf install -y git
+$ git clone https://github.com/coreos/kube-prometheus.git
+$ cd kube-prometheus/
+$ kubectl apply --server-side -f manifests/setup
+$ kubectl wait \
+	--for condition=Established \
+	--all CustomResourceDefinition \
+	--namespace=monitoring
+$ kubectl apply -f manifests/
