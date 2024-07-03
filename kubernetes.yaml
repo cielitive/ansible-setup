@@ -661,3 +661,6 @@ $ kubectl wait \
   --all CustomResourceDefinition \
   --namespace=monitoring
 $ kubectl apply -f manifests/
+
+
+kubectl taint node k8s-master node.kubernetes.io/not-ready:NoSchedule-
