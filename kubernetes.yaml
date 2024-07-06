@@ -2,34 +2,24 @@
 # 【参考】環境情報
 # ==========
 example.com:
-  network:
-    local: 192.168.9.0/24
-    Cluster: 10.0.0.0/16
+  network: 192.168.3.0/24
   host:
     - "k8s-master":
-        os: rockylinux-9
+        os: Red Hat Enterprise Linux 8.10 (Ootpa)
         IP:
-          eth1: 192.168.3.xxx
-          eth2: 192.168.9.20
-          eth3: -
+          enp0s3: -
+          enp0s8(hostonly): 192.168.56.101
+          enp0s9(bridge): 192.168.3.123
         DNS: -
-        GW: 10.0.2.2
+        GW: 192.168.3.1
     - "k8s-node01":
-        OS: rockylinux-9
+        OS: Red Hat Enterprise Linux 8.10 (Ootpa)
         IP:
-          eth1: 192.168.3.xxx
-          eth2: 192.168.9.21
-          eth3: -
+          enp0s3: -
+          enp0s8(hostonly): 192.168.56.xxx
+          enp0s9(bridge): 192.168.3.xxx
         DNS: -
-        GW: 10.0.2.2
-    - "k8s-node02":
-        OS: rockylinux-9
-        IP:
-          eth1: 192.168.3.xxx
-          eth2: 192.168.9.22
-          eth3: -
-        DNS: -
-        GW: 10.0.2.2
+        GW: 192.168.3.1
 
 Kubernetes:
   Version: 1.30.0
@@ -43,30 +33,76 @@ Docker:
 CNI:
   Calico:
     Version: 3.28.0
-
 Prometeus:
   Version: 
-
 Grafana:
   Version: 
 
 # ==========
-# 事前準備( ControlePlane, WokerNode )
+# 事前準備 ( ControlePlane, WokerNode )
 # ==========
 # -----
-# ユーザ作成
+# [参考]自動接続有効化(=IPアドレス自動付与)
+# -----
+$ nmcli connection modify enp0s8 connection.autoconnect yes
+$ nmcli connection modify enp0s9 connection.autoconnect yes
+
+# -----
+# [参考]サブスクリプションチェック無効化
+# -----
+$ sed -i 's/enabled=1/enabled=0/' /etc/yum/pluginconf.d/subscription-manager.conf
+
+# -----
+# [参考]ローカルDNFリポジトリ作成
+# -----
+### isoファイルは「/root」配下に配置する
+
+$ cat <<EOT >/etc/yum.repos.d/local.repo
+[BaseOS-media]
+name=Red Hat Enterprise Linux 8 - BaseOS
+# metadata_expire=-1
+gpgcheck=1
+enabled=1
+baseurl=file:///mnt/BaseOS/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[AppStream-media]
+name=Red Hat Enterprise Linux 8 - AppStream
+# metadata_expire=-1
+gpgcheck=1
+enabled=1
+baseurl=file:///mnt/AppStream/
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+EOT
+
+$ mount -o loop,ro,auto,nofail -t iso9660 /root/rhel-8.10-x86_64-dvd.iso /mnt
+$ echo "/root/rhel-8.10-x86_64-dvd.iso   /mnt   iso9660   loop,ro,auto,nofail 0 0" >>/etc/fstab 
+
+# -----
+# [参考]ユーザ作成
 # -----
 
 # -----
-# "hosts"に追加する
+# ホスト名変更
+# -----
+$ hostnamectl set-hostname k8s-master
+
+# -----
+# "hosts"追加
 # -----
 $ sudo sed -i '/^127.0.1.1/d' /etc/hosts
 $ sudo cat <<EOT >>/etc/hosts
-# kubernetes node list
-192.168.9.20   k8s-master.example.com k8s-master
-192.168.9.21   k8s-node01.example.com k8s-node01
-192.168.9.22   k8s-node02.example.com k8s-node02
+192.168.56.101   k8s-master.example.com k8s-master
 EOT
+
+# -----
+# swap無効化
+# -----
+$ sudo swapoff -a
+$ sudo sed -i -e '/swap/s/^/# /g' /etc/fstab
+
+### swapが無効化されていることを確認する(→なにも表示されないこと)
+$ sudo swapon -s
 
 # -----
 # Firewalld無効化
@@ -81,33 +117,14 @@ disabled
 # SELinux無効化
 # -----
 $ sudo setenforce 0
-$ sudo sed -i -E 's/^SELINUX=(enforcing|permissive)$/SELINUX=disabled/' /etc/selinux/config
-$ grep "^SELINUX=" /etc/selinux/config
-SELINUX=disabled
+$ sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+$ reboot
 
-$ sestatus
-SELinux status:                 enabled
-SELinuxfs mount:                /sys/fs/selinux
-SELinux root directory:         /etc/selinux
-Loaded policy name:             targeted
-Current mode:                   permissive
-Mode from config file:          disabled
-Policy MLS status:              enabled
-Policy deny_unknown status:     allowed
-Memory protection checking:     actual (secure)
-Max kernel policy version:      33
+$ sestatus 
+SELinux status:                 disabled
 
 # -----
-# swap無効化
-# -----
-$ sudo swapoff -a
-$ sudo sed -i -e '/swap/s/^/# /g' /etc/fstab
-
-### swapが無効化されていることを確認する(→なにも表示されないこと)
-$ sudo swapon -s
-
-# -----
-# [参考]"UUID"を確認する
+# [参考]"UUID"確認
 # -----
 $ dmidecode -s system-uuid
 3A164042-9096-4421-AF53-4DB78638690A
@@ -115,6 +132,7 @@ $ dmidecode -s system-uuid
 # -----
 # 前提パッケージ
 # -----
+$ dnf install -y vim git wget jq
 $ dnf install -y iproute-tc chrony
 $ rpm -qa | egrep "iproute-tc|chrony"
 chrony-4.3-1.el9.aarch64
@@ -127,10 +145,10 @@ $ sudo modprobe overlay
 $ sudo modprobe br_netfilter
 
 ### 永続化
-$ cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
+$ cat <<EOT | sudo tee /etc/modules-load.d/containerd.conf
 overlay
 br_netfilter
-EOF
+EOT
 
 $ lsmod | egrep "overlay|br_netfilter"
 br_netfilter           32768  0
@@ -140,11 +158,11 @@ overlay               151552  0
 # -----
 # カーネルパラメータ修正
 # -----
-$ cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+$ cat <<EOT | sudo tee /etc/sysctl.d/k8s.conf
 net.ipv4.ip_forward = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.bridge.bridge-nf-call-ip6tables = 1
-EOF
+EOT
 
 $ sudo sysctl --system
 $ sudo sysctl net.ipv4.ip_forward net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables
@@ -157,22 +175,39 @@ net.bridge.bridge-nf-call-ip6tables = 1
 # Docker
 # ==========
 # -----
-# リポジトリを追加する
+# Dockerリポジトリ追加
 # -----
 $ sudo dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo
 
 # -----
-# "Docker"をインストールする
+# "Docker"インストール
 # -----
 $ sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 $ rpm -qa | grep -E "docker-ce|docker-ce-cli|containerd.io"
-containerd.io-1.6.33-3.1.el9.aarch64
-docker-ce-cli-26.1.4-1.el9.aarch64
-docker-ce-rootless-extras-26.1.4-1.el9.aarch64
-docker-ce-26.1.4-1.el9.aarch64
+containerd.io-1.7.18-3.1.el8.x86_64
+docker-ce-cli-27.0.3-1.el8.x86_64
+docker-ce-27.0.3-1.el8.x86_64
+docker-ce-rootless-extras-27.0.3-1.el8.x86_64
 
 # -----
-# "Docker"を起動する
+# [参考]デーモン設定変更
+# -----
+# cat <<EOF > /etc/docker/daemon.json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "100m"
+  },
+  "storage-driver": "overlay2",
+  "storage-opts": [
+    "overlay2.override_kernel_check=true"
+  ]
+}
+EOF
+
+# -----
+# "Docker"起動
 # -----
 $ systemctl --now enable docker.service
 $ systemctl is-active docker.service
@@ -181,7 +216,7 @@ $ systemctl is-enabled docker.service
 enabled
 
 # -----
-# バージョンを確認する
+# バージョン確認
 # -----
 $ docker version
 Client: Docker Engine - Community
@@ -304,7 +339,7 @@ EOT
 # Kubernetes
 # ==========
 # -----
-# リポジトリを追加する
+# Kubernetesリポジトリ追加
 # -----
 $ cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
 [kubernetes]
@@ -317,27 +352,79 @@ exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
 EOF
 
 # -----
-# "Kubernetes"をインストールする( ControlePlane )
+# "Kubernetes"インストール
 # -----
 $ sudo yum install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+$ systemctl enable kubelet.service
 
 # -----
-# "Kubernetes"をインストールする ( WokerNode )
-# -----
-$ sudo yum install -y kubelet --disableexcludes=kubernetes
-
-# -----
-# "Cgroup Driver"を変更する( ControlePlane )
+#  デフォルト設定修正
 # -----
 $ kubeadm config print init-defaults | tee ClusterConfiguration.yaml
+$ cat <<EOT >>ClusterConfiguration.yaml
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+EOT
+
+$ sed -i '/advertiseAddress/s/1.2.3.4/192.168.56.101/' ClusterConfiguration.yaml
+$ sed -i '/^  name/s/node/k8s-master/' ClusterConfiguration.yaml
+$ sed -i '/serviceSubnet/N;s/\n/\n  podSubnet: 10.0.0.0\/16\n/;' ClusterConfiguration.yaml
+
+# [修正後] ----------------------------------------
+
+apiVersion: kubeadm.k8s.io/v1beta3
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 192.168.56.101
+  bindPort: 6443
+nodeRegistration:
+  criSocket: unix:///var/run/containerd/containerd.sock
+  imagePullPolicy: IfNotPresent
+  name: k8s-master
+  taints: null
+---
+apiServer:
+  timeoutForControlPlane: 4m0s
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controllerManager: {}
+dns: {}
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: registry.k8s.io
+kind: ClusterConfiguration
+kubernetesVersion: 1.30.0
+networking:
+  dnsDomain: cluster.local
+  serviceSubnet: 10.96.0.0/12
+  podSubnet: 10.0.0.0/16
+scheduler: {}
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+
+# [修正後] ----------------------------------------
 
 # -----
-#  ( ControlePlane )
+# 
 # -----
 $ kubeadm config print join-defaults | tee JoinConfiguration.yaml
 
 # -----
-# ( ControlePlane )
+# 
 # -----
 $ kubeadm init --config=ClusterConfiguration.yaml
 Your Kubernetes control-plane has initialized successfully!
@@ -358,23 +445,23 @@ Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
 
 Then you can join any number of worker nodes by running the following on each as root:
 
-kubeadm join 192.168.9.20:6443 --token abcdef.0123456789abcdef \
-        --discovery-token-ca-cert-hash sha256:554f1d1c056768a8e00045dea92c0fe1d0b7680de9bc92f5ded89e3f5775358a 
+kubeadm join 192.168.56.101:6443 --token abcdef.0123456789abcdef \
+        --discovery-token-ca-cert-hash sha256:a4a6b26fcb0a92f8a6ddf4cb815252a454b4ab5d0ccb7d1f8ab3a31574db4e38 
 
 # -----
-# [参考]ハッシュ値(sha256)の再表示
+# [参考]ハッシュ値(sha256)再表示
 # -----
 $ openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
 
 # -----
-# ( ControlePlane )
+# 
 # -----
 $ mkdir -p $HOME/.kube
 $ sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
 $ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # -----
-# バージョンを確認する( ControlePlane )
+# バージョン確認
 # -----
 $ kubectl version
 Client Version: v1.30.2
@@ -382,7 +469,7 @@ Kustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3
 Server Version: v1.30.0
 
 # -----
-# Workerノード登録( ControlePlane )
+# Workerノード登録
 # -----
 $ kubectl describe node k8s-master
 Name:               k8s-master
@@ -421,34 +508,16 @@ CreationTimestamp:  Sun, 16 Jun 2024 20:19:43 -0500
 Taints:             node.kubernetes.io/not-ready:NoSchedule
 
 # -----
-# Workerノード登録( WokerNode )
+#
 # -----
-$ kubeadm join 192.168.9.20:6443 --token abcdef.0123456789abcdef \
-        --discovery-token-ca-cert-hash sha256:9af7b7851154599f2bfc7e6e4aad91ece943e586ebdd6d45bc8c42b49869ccd7 
+$ kubectl get node --all-namespaces
+NAME         STATUS   ROLES           AGE   VERSION
+k8s-master   Ready    control-plane   22m   v1.30.2
 
-# -----
-# [参考]
-# -----
-$ cat > /var/lib/kubelet/bootstrap-kubeconfig <<EOT
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority: /var/lib/kubernetes/ca.pem
-    server: https://192.168.3.55:6443
-  name: bootstrap
-contexts:
-- context:
-    cluster: bootstrap
-    user: kubelet-bootstrap
-  name: bootstrap
-current-context: bootstrap
-kind: Config
-preferences: {}
-users:
-- name: kubelet-bootstrap
-  user:
-    token: 07401b.f395accd246ae52d
-EOT
+$ kubectl get nodes -o wide
+NAME         STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                      KERNEL-VERSION                  CONTAINER-RUNTIME
+k8s-master   Ready    control-plane   18m   v1.30.2   192.168.9.20   <none>        Rocky Linux 9.3 (Blue Onyx)   5.14.0-362.18.1.el9_3.aarch64   containerd://1.6.33
+
 
 # ==========
 # Flannel ( ControlePlane, WokerNode )
@@ -457,8 +526,9 @@ EOT
 #
 # -----
 
+
 # ==========
-# Calico ( ControlePlane, WokerNode )
+# Calico
 # ==========
 # -----
 #
@@ -469,17 +539,8 @@ $ kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28
 #
 # -----
 $ mkdir ~/calico && cd $_
-$ wget https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
-$ vim custom-resources.yaml
------
-spec:
-  # Configures Calico networking.
-  calicoNetwork:
-    ipPools:
-    - name: default-ipv4-ippool
-      blockSize: 26
-      cidr: 10.0.0.0/16
-
+$ curl -OL https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
+$ sed -i 's/cidr: 192.168.0.0/cidr: 10.0.0.0/' custom-resources.yaml
 $ kubectl create -f custom-resources.yaml
 installation.operator.tigera.io/default created
 apiserver.operator.tigera.io/default created
@@ -496,17 +557,6 @@ kube-node-lease    Active   21m
 kube-public        Active   21m
 kube-system        Active   21m
 tigera-operator    Active   5m19s
-
-# -----
-#
-# -----
-$ kubectl get node --all-namespaces
-NAME         STATUS   ROLES           AGE   VERSION
-k8s-master   Ready    control-plane   22m   v1.30.2
-
-$ kubectl get nodes -o wide
-NAME         STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE                      KERNEL-VERSION                  CONTAINER-RUNTIME
-k8s-master   Ready    control-plane   18m   v1.30.2   192.168.9.20   <none>        Rocky Linux 9.3 (Blue Onyx)   5.14.0-362.18.1.el9_3.aarch64   containerd://1.6.33
 
 # -----
 #
@@ -555,6 +605,7 @@ kube-system     kube-proxy        1         1         1       1            1    
 # -----
 #
 # -----
+$ mkdir /root/nginx && cd $_
 $ cat <<EOT | sudo tee nginx.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -630,11 +681,29 @@ nginx-service   NodePort    10.100.104.214   <none>        80:31116/TCP   9s
 #
 # -----
 $ kubectl describe services nginx-service
+Name:                     nginx-service
+Namespace:                default
+Labels:                   app=nginx
+Annotations:              <none>
+Selector:                 app=nginx
+Type:                     NodePort
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.107.84.112
+IPs:                      10.107.84.112
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+NodePort:                 <unset>  32352/TCP
+Endpoints:                10.0.235.199:80,10.0.235.200:80
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
 
 # -----
 #
 # -----
-$ curl $(kubectl get service | grep nginx-service | awk '{print $3}')
+### "Welcome to nginx!"が表示されれば問題なし
+$ curl -s $(kubectl get service | grep nginx-service | awk '{print $3}') | grep "title"
 
 # -----
 # [参考]Service削除
@@ -646,15 +715,15 @@ $ curl $(kubectl get service | grep nginx-service | awk '{print $3}')
 # -----
 # kubectl delete deployment nginx-deployment
 
+
 # ==========
 # Prometheus
 # ==========
 # -----
 #
 # -----
-$ dnf install -y git
-$ git clone https://github.com/coreos/kube-prometheus.git
-$ cd kube-prometheus/
+$ cd /root
+$ git clone https://github.com/coreos/kube-prometheus.git && cd kube-prometheus
 $ kubectl apply --server-side -f manifests/setup
 $ kubectl wait \
   --for condition=Established \
@@ -662,5 +731,36 @@ $ kubectl wait \
   --namespace=monitoring
 $ kubectl apply -f manifests/
 
+# -----
+#
+# -----
+$ kubectl get pod --namespace monitoring
+NAME                                  READY   STATUS    RESTARTS   AGE
+alertmanager-main-0                   2/2     Running   0          8m24s
+alertmanager-main-1                   2/2     Running   0          8m24s
+alertmanager-main-2                   2/2     Running   0          8m24s
+blackbox-exporter-597d86cf5c-n524m    3/3     Running   0          9m25s
+grafana-854bdcdf45-v7h64              1/1     Running   0          9m24s
+kube-state-metrics-6b6c9cf9f6-x5jpm   3/3     Running   0          9m24s
+node-exporter-ftgmv                   2/2     Running   0          9m23s
+prometheus-adapter-5794d7d9f5-bzbgb   1/1     Running   0          9m22s
+prometheus-adapter-5794d7d9f5-prpgl   1/1     Running   0          9m22s
+prometheus-k8s-0                      2/2     Running   0          8m23s
+prometheus-k8s-1                      2/2     Running   0          8m23s
+prometheus-operator-b544c4b97-nbrcn   2/2     Running   0          9m22s
 
-kubectl taint node k8s-master node.kubernetes.io/not-ready:NoSchedule-
+# -----
+#
+# -----
+$ kubectl get service --namespace monitoring
+NAME                    TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)                      AGE
+alertmanager-main       ClusterIP   10.107.225.222   <none>        9093/TCP,8080/TCP            9m59s
+alertmanager-operated   ClusterIP   None             <none>        9093/TCP,9094/TCP,9094/UDP   8m58s
+blackbox-exporter       ClusterIP   10.103.15.40     <none>        9115/TCP,19115/TCP           9m58s
+grafana                 ClusterIP   10.100.181.95    <none>        3000/TCP                     9m57s
+kube-state-metrics      ClusterIP   None             <none>        8443/TCP,9443/TCP            9m57s
+node-exporter           ClusterIP   None             <none>        9100/TCP                     9m56s
+prometheus-adapter      ClusterIP   10.97.129.35     <none>        443/TCP                      9m55s
+prometheus-k8s          ClusterIP   10.99.17.160     <none>        9090/TCP,8080/TCP            9m56s
+prometheus-operated     ClusterIP   None             <none>        9090/TCP                     8m56s
+prometheus-operator     ClusterIP   None             <none>        8443/TCP                     9m55s
