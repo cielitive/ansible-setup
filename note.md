@@ -1,0 +1,1 @@
+aws rds describe-db-instances --query "DBInstances[*].[DBInstanceIdentifier,DBInstanceClass,Engine,EngineVersion]" --output json
