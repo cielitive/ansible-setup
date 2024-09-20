@@ -21,6 +21,6 @@ aws ec2 describe-instances --instance-ids <インスタンスID> --query 'Reserv
 
 aws ec2 describe-vpcs --vpc-ids <VPC ID> --query 'Vpcs[*].CidrBlock' --output text
 
-
+aws ec2 describe-security-groups --group-ids <セキュリティグループID> --query 'SecurityGroups[*].VpcId' --output text
 
 
