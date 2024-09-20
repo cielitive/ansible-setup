@@ -1,3 +1,9 @@
+aws ec2 describe-instances --instance-ids <インスタンスID> --query 'Reservations[*].Instances[*].[Tags[?Key==`Name`].Value, SubnetId]' --output text | while read name subnet; do echo "Instance Name: $name"; echo "Subnet CIDR: $(aws ec2 describe-subnets --subnet-ids $subnet --query "Subnets[*].CidrBlock" --output text)"; done
+
+
+
+
+
 SELECT relname AS table_name
 FROM pg_trigger t
 JOIN pg_class c ON t.tgrelid = c.oid
