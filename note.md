@@ -13,3 +13,14 @@ WHERE t.tgname LIKE 'repack_%';  -- repackトリガーを対象にしている�
 DROP TRIGGER IF EXISTS repack_insert_trigger ON your_table;
 
 aws rds describe-db-instances --query "DBInstances[*].[DBInstanceIdentifier,DBInstanceClass,Engine,EngineVersion]" --output json
+
+
+
+
+aws ec2 describe-instances --instance-ids <インスタンスID> --query 'Reservations[*].Instances[*].[VpcId]' --output text
+
+aws ec2 describe-vpcs --vpc-ids <VPC ID> --query 'Vpcs[*].CidrBlock' --output text
+
+
+
+
