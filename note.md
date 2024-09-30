@@ -24,3 +24,25 @@ aws ec2 describe-vpcs --vpc-ids <VPC ID> --query 'Vpcs[*].CidrBlock' --output te
 aws ec2 describe-security-groups --group-ids <セキュリティグループID> --query 'SecurityGroups[*].VpcId' --output text
 
 
+aws iam list-attached-role-policies --role-name <ロール名>
+aws iam list-role-policies --role-name <ロール名>
+
+aws iam list-attached-user-policies --user-name my-user
+aws iam list-user-policies --user-name my-user
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
