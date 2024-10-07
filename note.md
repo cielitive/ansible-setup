@@ -33,7 +33,7 @@ aws iam list-user-policies --user-name my-user
 
 
 
-
+eventName = AssumeRole AND requestParameters.roleSessionName = "13456655"
 
 
 
