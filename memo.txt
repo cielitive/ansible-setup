@@ -90,3 +90,7 @@ PS1='[\[\e[1;32m\]\t\[\e[m\] \u@\h:\w]\$ '
         state: present
       loop: "{{ result.results }}"
       when: item.rc == 0
+
+
+type=USER_AUTH msg=audit(1698572345.123:456): pid=1234 uid=0 auid=1000 ses=1 msg='op=PAM:authentication acct="ec2-user" exe="/usr/sbin/sshd" hostname=192.0.2.1 addr=192.0.2.1 terminal=ssh res=success'
+
