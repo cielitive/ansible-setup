@@ -1,0 +1,124 @@
+name: Deploy Lambda (Terraform, version-from-code)
+
+on:
+  push:
+    branches:
+      - dev
+      - staging
+      - main
+
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "デプロイ対象の環境ID（all or dev-001 / dev-002 / dev-003 / stg-001 / prd-002 ...）"
+        required: false
+        default: "all"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ap-northeast-1
+      DEPLOY_TARGET_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_env || 'all' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      ###############################################
+      # ブランチごとに AWS アカウント & デフォルト環境リストを切り替え
+      ###############################################
+
+      - name: Configure AWS for dev
+        if: github.ref == 'refs/heads/dev'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set dev context
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "DEFAULT_ENVS=dev-001 dev-002 dev-003" >> $GITHUB_ENV
+
+      - name: Configure AWS for staging
+        if: github.ref == 'refs/heads/staging'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_STG }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set stg context
+        if: github.ref == 'refs/heads/staging'
+        run: |
+          echo "DEFAULT_ENVS=stg-001" >> $GITHUB_ENV
+
+      - name: Configure AWS for prod
+        if: github.ref == 'refs/heads/main'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PRD }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set prod context
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "DEFAULT_ENVS=prd-002" >> $GITHUB_ENV
+
+      ###############################################
+      # 対象環境の決定
+      ###############################################
+
+      - name: Decide target envs
+        run: |
+          echo "DEPLOY_TARGET_ENV=${DEPLOY_TARGET_ENV}"
+          echo "DEFAULT_ENVS=${DEFAULT_ENVS}"
+
+          if [ "${DEPLOY_TARGET_ENV}" = "all" ]; then
+            TARGET_ENVS="${DEFAULT_ENVS}"
+          else
+            TARGET_ENVS="${DEPLOY_TARGET_ENV}"
+          fi
+
+          echo "TARGET_ENVS=${TARGET_ENVS}"
+          echo "TARGET_ENVS=${TARGET_ENVS}" >> $GITHUB_ENV
+
+      ###############################################
+      # 各環境ディレクトリで Terraform 実行
+      ###############################################
+
+      - name: Apply Terraform per env
+        run: |
+          set -e
+
+          for ENV in ${TARGET_ENVS}; do
+            echo "=============================="
+            echo "Deploying environment: ${ENV}"
+            echo "=============================="
+
+            if [[ "${ENV}" == dev-* ]]; then
+              TF_DIR="environmental/development/${ENV}"
+            elif [[ "${ENV}" == stg-* ]]; then
+              TF_DIR="environmental/staging/${ENV}"
+            elif [[ "${ENV}" == prd-* ]]; then
+              TF_DIR="environmental/production/${ENV}"
+            else
+              echo "Unknown ENV: ${ENV}"
+              exit 1
+            fi
+
+            echo "Terraform directory: ${TF_DIR}"
+
+            cd "${TF_DIR}"
+
+            terraform init -input=false
+            terraform apply -auto-approve
+
+            cd - >/dev/null
+          done
