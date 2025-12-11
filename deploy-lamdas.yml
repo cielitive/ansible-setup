@@ -1,0 +1,258 @@
+name: Deploy Lambda (Terraform)
+
+on:
+  # PRマージなどで自動デプロイ
+  push:
+    branches:
+      - dev
+      - staging
+      - main
+
+  # 手動実行時に env/func を指定したい場合
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: "デプロイ対象の環境ID（all or dev-001 / dev-002 / dev-003 / stg-001 / prd-002 ...）"
+        required: false
+        default: "all"
+      target_func:
+        description: "デプロイ対象の関数名（all / func1 / func2 / func3）"
+        required: false
+        default: "all"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ap-northeast-1
+      # repo内のLambdaコードの場所（例）
+      LAMBDA_ROOT: lambda
+      FUNCTIONS: "func1 func2 func3"
+      # workflow_dispatch からの入力 or デフォルト "all"
+      DEPLOY_TARGET_ENV: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_env || 'all' }}
+      DEPLOY_TARGET_FUNC: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.target_func || 'all' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.8.5
+
+      ###############################################
+      # ブランチに応じて AWS アカウント / S3バケット / 環境リストを切り替え
+      ###############################################
+
+      - name: Configure AWS for dev account
+        if: github.ref == 'refs/heads/dev'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_DEV }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set context for dev account
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          echo "CODE_BUCKET=dev-artifacts-bucket" >> $GITHUB_ENV
+          # devブランチのデフォルト対象環境
+          echo "DEFAULT_ENVS=dev-001 dev-002 dev-003" >> $GITHUB_ENV
+
+      - name: Configure AWS for staging account
+        if: github.ref == 'refs/heads/staging'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_STG }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set context for staging account
+        if: github.ref == 'refs/heads/staging'
+        run: |
+          echo "CODE_BUCKET=stg-artifacts-bucket" >> $GITHUB_ENV
+          echo "DEFAULT_ENVS=stg-001" >> $GITHUB_ENV
+
+      - name: Configure AWS for prod account
+        if: github.ref == 'refs/heads/main'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PRD }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set context for prod account
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "CODE_BUCKET=prd-artifacts-bucket" >> $GITHUB_ENV
+          echo "DEFAULT_ENVS=prd-002" >> $GITHUB_ENV
+
+      ###############################################
+      # 対象環境 / 対象Lambda(func) の決定
+      ###############################################
+
+      - name: Decide target envs & functions
+        run: |
+          echo "DEPLOY_TARGET_ENV=${DEPLOY_TARGET_ENV}"
+          echo "DEPLOY_TARGET_FUNC=${DEPLOY_TARGET_FUNC}"
+          echo "DEFAULT_ENVS=${DEFAULT_ENVS}"
+
+          # 環境の決定：all なら DEFAULT_ENVS、それ以外ならその env のみ
+          if [ "${DEPLOY_TARGET_ENV}" = "all" ]; then
+            TARGET_ENVS="${DEFAULT_ENVS}"
+          else
+            TARGET_ENVS="${DEPLOY_TARGET_ENV}"
+          fi
+
+          # 関数の決定：all なら全関数、それ以外ならその関数のみ
+          if [ "${DEPLOY_TARGET_FUNC}" = "all" ]; then
+            TARGET_FUNCS="${FUNCTIONS}"
+          else
+            TARGET_FUNCS="${DEPLOY_TARGET_FUNC}"
+          fi
+
+          echo "TARGET_ENVS=${TARGET_ENVS}"
+          echo "TARGET_FUNCS=${TARGET_FUNCS}"
+
+          echo "TARGET_ENVS=${TARGET_ENVS}" >> $GITHUB_ENV
+          echo "TARGET_FUNCS=${TARGET_FUNCS}" >> $GITHUB_ENV
+
+      ###############################################
+      # 各環境 × 各関数について S3 Version を取得し、Terraform apply
+      ###############################################
+
+      - name: Build, upload and apply Terraform per env
+        run: |
+          set -e
+
+          echo "Using CODE_BUCKET=${CODE_BUCKET}"
+
+          for ENV in ${TARGET_ENVS}; do
+            echo "=============================="
+            echo "Processing environment: ${ENV}"
+            echo "=============================="
+
+            # ENV から Terraform ディレクトリを決定
+            if [[ "${ENV}" == dev-* ]]; then
+              TF_DIR="environmental/development/${ENV}"
+            elif [[ "${ENV}" == stg-* ]]; then
+              TF_DIR="environmental/staging/${ENV}"
+            elif [[ "${ENV}" == prd-* ]]; then
+              TF_DIR="environmental/production/${ENV}"
+            else
+              echo "Unknown ENV: ${ENV}"
+              exit 1
+            fi
+
+            echo "Terraform directory: ${TF_DIR}"
+
+            # funcごとの Version ID を格納する変数
+            FUNC1_VER=""
+            FUNC2_VER=""
+            FUNC3_VER=""
+
+            # 全funcに対して「最新版 VersionId を取得」
+            # （指定された func については zip をアップロードしてから取得）
+            for FUNC in ${TARGET_FUNCS}; do
+              echo "--- Target function: ${FUNC}"
+
+              # ZIP ファイルのローカルパス（例）
+              ZIP_LOCAL_PATH="${FUNC}.zip"
+              CODE_DIR="${LAMBDA_ROOT}/${FUNC}"
+              S3_KEY="${FUNC}.zip"
+
+              # 対象のfuncについては zip を作成してアップロード
+              echo "Building zip from ${CODE_DIR} ..."
+              (cd "${CODE_DIR}" && zip -r "../../${ZIP_LOCAL_PATH}" .)
+
+              echo "Uploading to s3://${CODE_BUCKET}/${S3_KEY} ..."
+              aws s3 cp "${ZIP_LOCAL_PATH}" "s3://${CODE_BUCKET}/${S3_KEY}"
+
+              # バージョニングされたS3から最新VersionIdを取得
+              VERSION_ID=$(aws s3api list-object-versions \
+                --bucket "${CODE_BUCKET}" \
+                --prefix "${S3_KEY}" \
+                --query "Versions[?IsLatest==\`true\`].VersionId | [0]" \
+                --output text)
+
+              echo "Latest Version for ${FUNC}: ${VERSION_ID}"
+
+              case "${FUNC}" in
+                func1)
+                  FUNC1_VER="${VERSION_ID}"
+                  ;;
+                func2)
+                  FUNC2_VER="${VERSION_ID}"
+                  ;;
+                func3)
+                  FUNC3_VER="${VERSION_ID}"
+                  ;;
+                *)
+                  echo "Unknown function: ${FUNC}"
+                  exit 1
+                  ;;
+              esac
+
+              # 作ったzipは掃除
+              rm -f "${ZIP_LOCAL_PATH}"
+            done
+
+            # 対象外のfuncは、現在の最新VersionIdを取得しておく
+            # → Terraformの変数として「全funcのVersionId」を渡し、
+            #   Versionが変わったLambdaだけが更新される状態にする
+            for FUNC in ${FUNCTIONS}; do
+              S3_KEY="${FUNC}.zip"
+
+              case "${FUNC}" in
+                func1)
+                  if [ -z "${FUNC1_VER}" ]; then
+                    VERSION_ID=$(aws s3api list-object-versions \
+                      --bucket "${CODE_BUCKET}" \
+                      --prefix "${S3_KEY}" \
+                      --query "Versions[?IsLatest==\`true\`].VersionId | [0]" \
+                      --output text)
+                    FUNC1_VER="${VERSION_ID}"
+                    echo "Fetched existing Version for func1: ${FUNC1_VER}"
+                  fi
+                  ;;
+                func2)
+                  if [ -z "${FUNC2_VER}" ]; then
+                    VERSION_ID=$(aws s3api list-object-versions \
+                      --bucket "${CODE_BUCKET}" \
+                      --prefix "${S3_KEY}" \
+                      --query "Versions[?IsLatest==\`true\`].VersionId | [0]" \
+                      --output text)
+                    FUNC2_VER="${VERSION_ID}"
+                    echo "Fetched existing Version for func2: ${FUNC2_VER}"
+                  fi
+                  ;;
+                func3)
+                  if [ -z "${FUNC3_VER}" ]; then
+                    VERSION_ID=$(aws s3api list-object-versions \
+                      --bucket "${CODE_BUCKET}" \
+                      --prefix "${S3_KEY}" \
+                      --query "Versions[?IsLatest==\`true\`].VersionId | [0]" \
+                      --output text)
+                    FUNC3_VER="${VERSION_ID}"
+                    echo "Fetched existing Version for func3: ${FUNC3_VER}"
+                  fi
+                  ;;
+              esac
+            done
+
+            echo "Final Version IDs for ${ENV}:"
+            echo "  func1: ${FUNC1_VER}"
+            echo "  func2: ${FUNC2_VER}"
+            echo "  func3: ${FUNC3_VER}"
+
+            # Terraform 実行
+            cd "${TF_DIR}"
+
+            terraform init -input=false
+
+            terraform apply -auto-approve \
+              -var "func1_code_s3_object_version=${FUNC1_VER}" \
+              -var "func2_code_s3_object_version=${FUNC2_VER}" \
+              -var "func3_code_s3_object_version=${FUNC3_VER}"
+
+            cd - >/dev/null
+          done
